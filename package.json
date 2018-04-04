@@ -1,0 +1,22 @@
+{
+  "name": "p5",
+  "version": "0.0.1",
+  "description": "NPM packet for a P5 node",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sigurthorb/P5.git"
+  },
+  "author": "",
+  "license": "GNU",
+  "bugs": {
+    "url": "https://github.com/Sigurthorb/P5/issues"
+  },
+  "homepage": "https://github.com/Sigurthorb/P5#readme",
+  "dependencies": {
+    "pem": "^1.12.4"
+  }
+}
