@@ -9,7 +9,7 @@ let BUFF_SIZE = 1024;
 let PERIOD_SEC = 3;
 let NUM_BUFF = 1000;
 
-let QueueHandlers = [];
+let queueHandlers = [];
 
 let randIndexFunGenerator = function(n) {
     let indexes = Array(n).fill(true);
@@ -31,91 +31,92 @@ class InterfaceQueueHandler {
   constructor(sendQueuesCb) {
     this.id = interfaces.length;
     this.sendQueuesCb = sendQueuesCb;
-    this.enabled = true;
-    this.incomingDataQueue = [];
-    this.queue = [];
-    this.generateRandomQueue();
+    this.running = false;
+    this.incomingPacketQueue = [];
+    // this.packetQueue
+    this.generateRandomPacketQueue();
   }
 
-  disable() {
-    this.enabled = false;
+  stop() {
+    this.running = false;
   }
 
-  enable() {
-    this.enabled = true;
+  start() {
+    this.running = true;
   }
 
-  add(data) {
+  add(packets) {
     // make sure that all queues are of same length
-    this.realDataQueue = this.queue.concat(data);
+    this.realDataQueue = this.realDataQueue.concat(packets);
   }
 
-  generateRandomQueue() {
-    this.queue = [];
+  generateRandomPacketQueue() {
+    this.packetQueue = [];
     //todo, generate random queues of length NUM_BUFF
     //make sure they are padded
   }
 
-  insertRealData() {
+  insertRealPackets() {
     if(this.incomingDataQueue.length == 0) {
       return;
     }
 
-    let queues = [];
+    let toAddToQueue = [];
     if(this.incomingDataQueue > NUM_BUFF) {
-      queues = this.incomingDataQueue.slice(0,this.NUM_BUFF);
+      toAddToQueue = this.incomingDataQueue.slice(0,this.NUM_BUFF);
     } else {
-      queues = this.incomingDataQueue;
+      toAddToQueue = this.incomingDataQueue;
       this.incomingDataQueue = [];
     }
 
-    let randIndexGen = randIndexFunGenerator(this.bufferArray.length);
+    let randIndexGen = randIndexFunGenerator(this.packetQueue.length);
 
-    for(var i = 0; i < buffers.length; i++) {
-      var buff = buffers[i];
+    for(var i = 0; i < toAddToQueue.length; i++) {
+      var packet = toAddToQueue[i];
       let index = randIndexGen();
-      this.bufferArray[index] = buff;
+      this.packetQueue[index] = packet;
     }
   }
 
-  generatorLoop() {
-    if(this.enabled) {
+  EPOC() {
+    if(this.running) {
       // get buffers from the realDataQueue
-      // insert into bufferArray randomly
-      this.insertRealData();
-      this.sendBuffersCb(this.bufferArray);
-      this.generateBufferArray();
+      // insert into packetQueue randomly
+      this.insertRealPackets();
+      this.sendPacketCb(this.packetQueue);
+      this.generatePacketQueuey();
     }
-    setTimeout(this.sendLoop, PERIOD_SEC*1000)    
+    setTimeout(this.EPOC, PERIOD_SEC*1000)   ; 
   }
 }
 
-let add = function(id){
-  return function (data) {
-    interfaces[id].add(data);
+let addPackets = function(id){
+  return function (packets) {
+    queueHandlers[id].add(packets);
   };
 };
 
-let disable = function(id) {
+let stop = function(id) {
   return function() {
-    interfaces[id].disable;
+    queueHandlers[id].stop;
   };
 };
 
-let enable = function(id) {
+let start = function(id) {
   return function () {
-    interface[id].enable;
+    queueHandlers[id].start;
   };
 };
 
 let addBufferHandler = function(sendBuffersCb) {
   let handler = new InterfaceBufferHandler(sendBuffersCb);
   bufferHandlers.push(handler);
+
   return {
-    add: add(handler.id),
-    enable: enable(handler.id),
-    disable: disable(handler.id)
-  } 
-}
+    addPackets: addPackets(handler.id),
+    start: start(handler.id),
+    stop: stop(handler.id)
+  };
+};
 
 module.exports = addBufferHandler;
