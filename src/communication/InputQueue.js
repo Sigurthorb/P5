@@ -1,0 +1,2 @@
+var dataQueue = [];
+var synQueue = [];

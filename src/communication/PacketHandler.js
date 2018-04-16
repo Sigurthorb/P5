@@ -9,13 +9,12 @@ let BUFF_SIZE = 1024;
 let PERIOD_SEC = 3;
 let NUM_BUFF = 1000;
 
-let queueHandlers = [];
+let PacketHandlers = [];
 
 let randIndexFunGenerator = function(n) {
     let indexes = Array(n).fill(true);
     return function getRandom() {
-
-
+      
       let numbersLeft = indexes.keys();
       let numberIndex = random() * numbersLeft.length; // not secure, need better randomness
       let number = numberLeft[numberIndex];
@@ -26,7 +25,7 @@ let randIndexFunGenerator = function(n) {
 }
 
 // need new name
-class InterfaceQueueHandler {
+class PacketHandler {
 
   constructor(sendQueuesCb) {
     this.id = interfaces.length;
@@ -86,7 +85,7 @@ class InterfaceQueueHandler {
       this.sendPacketCb(this.packetQueue);
       this.generatePacketQueuey();
     }
-    setTimeout(this.EPOC, PERIOD_SEC*1000)   ; 
+    setTimeout(function(){this.EPOC()}, PERIOD_SEC*1000);
   }
 }
 
@@ -108,9 +107,9 @@ let start = function(id) {
   };
 };
 
-let addBufferHandler = function(sendBuffersCb) {
-  let handler = new InterfaceBufferHandler(sendBuffersCb);
-  bufferHandlers.push(handler);
+let addPacketHandler = function(sendBuffersCb) {
+  let handler = new PacketHandler(sendBuffersCb);
+  packetHandlers.push(handler);
 
   return {
     addPackets: addPackets(handler.id),
@@ -119,4 +118,4 @@ let addBufferHandler = function(sendBuffersCb) {
   };
 };
 
-module.exports = addBufferHandler;
+module.exports = addPacketHandler;
