@@ -1,8 +1,6 @@
 // router
-let sender = require("./socketReceiver");
-let listener = require("./socketReceiver");
 
-let incomingPackets = function(data) {
+let incomingPackets = function(data, senderFun) {
   // validateBuffer
   if(util.validPacket(data)) {
     
@@ -13,11 +11,36 @@ let incomingPackets = function(data) {
   }
 }
 
-let user = {
-  "ip": "",
-  "port": "",
-  "channel": ""
-};
+module.exports = function Router(db, messageCb) {
+  this.db = db;
+  this.cb = messageCb;
+  this.client = dgram.createSocket('udp4');
+
+  let send = function(host, port, message) {
+    client.send(message, 0, message.length, port, host, function(err) {
+      console.log('UDP message sent to ' + host +':'+ port);
+      if(err) console.log("SocketSendError: " + err);
+    });
+  };
+
+  this.parseMsg = function(message, remote) {
+    for(var i = 0; i < this.db.data.neighbors.length; i++) {
+      let neighbor = this.db.data.neighbors[i];
+      if(!(neighbor.address === remote.address && neighbor.port === remote.port)) {
+        send(neighbor.host, neighbor.port, message);
+      }
+    }
+
+    this.cb(message.toString());
+  }
+
+  this.sendMsg = function(message, receiverKey, receiverCh) {
+    for(var i = 0; i < this.db.data.neighbors.length; i++) {
+      let neighbor = this.db.data.neighbors[i];
+      send(neighbor.host, neighbor.port, buffer.from(message, "utf-8"));
+    }
+  }
+}
 
 listener(33333, incomingPackets);
 

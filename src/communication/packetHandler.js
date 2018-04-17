@@ -1,6 +1,6 @@
 // Currently expecting BigEndian as that is  'network byte order'
 
-var Parser = require("binary-parser").Parser;
+var Parser = require("binary-parser-encoder").Parser;
 
 var HeaderParser = new Parser()
   .endianess("big")
@@ -15,6 +15,9 @@ var HeaderParser = new Parser()
       } else {
         return "LEAVE";
       }
+    }, 
+    encoder: function(str) {
+      
     }
   })
   .uint32("channel")

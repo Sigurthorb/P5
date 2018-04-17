@@ -1,14 +1,29 @@
 var topology = require("./src/topology");
+var db = require("./src/db");
+var P5Server = require("./src/server");
 var keyGenerator = require("./src/crypto/keyGenerator");
 
 //Creates a New P5 network
 //topologyServers: Array of IPs or domains of topology server addresses
-//Returns: A promise with public key for the root node
+//Returns: A promise with a server object
 exports.create = function(topologyServers){
-	//Contact topology server with root channel and ip address
+	//Create Topology Network
+	return topology.createNetwork(topologyServers).then( netId => {
+		Generate Keys
+		keyGenerator.generateKeyPair(keys => {
+			var server = new P5Server({
+				networkId:netId, 
+				keys:keys,
+				channel:"",
+				topologyServers:topologyServers,
+				ports:{listener:33444, sender:33555} 
+			});
 
-	//Generate a public/private key combination upon response from topology server
-	
+			//Set server to router
+			return server;
+		});
+
+	});
 };
 
 //Joins an Existing P5 Network
