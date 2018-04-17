@@ -1,6 +1,6 @@
 {
   "crypto": {
-    "SymmetricKeySizeBytes": 16,
+    "SymmetricKeySizeBytes": 256,
     "PrivateKeySizeBits": 2048
   }
 }

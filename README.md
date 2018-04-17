@@ -9,4 +9,4 @@ Node
 npm
 
 #### Setup
-upd port open
+external upd port open and routed to your local IP

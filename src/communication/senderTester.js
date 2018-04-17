@@ -1,21 +1,21 @@
-let thorIP = "108.56.212.133";
-let thorPort = 33333;
+let ip = "192.168.0.1";
+let port = 33444;
 
-let sg = require("./senderGenerator");
+let socket = require("./socketSender.js");
 
-let senderInstance = sg(thorIP, thorPort);
-
-module.exports = senderInstance;
+module.exports = function(message) {
+  socket.send(ip, port, message);
+}
 
 // Code below usefull for test, recommend using node console if you want interactive
 /*
-senderInstance.send("1. Howdy");
+socket.send(ip, port, "1. Howdy");
 
-senderInstance.send("2. This is a message");
+socket.send(ip, port, "2. This is a message");
 
-senderInstance.send("3. This is another message");
+socket.send(ip, port, "3. This is another message");
 
 setTimeout(function() {
-  senderInstance.close();
+  socket.close();
 }, 1000);
 */

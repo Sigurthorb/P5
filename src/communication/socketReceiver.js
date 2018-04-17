@@ -3,8 +3,7 @@ let internalIp = require('internal-ip');
 var dgram = require('dgram');
 var server = dgram.createSocket('udp4');
 
-
-module.exports = function(port, messageCb) {
+let listen = function(port, messageCb) {
   externalIp.v4().then(publicIp => {
     internalIp.v4().then(localIp => {
       console.log("Your public IP address is '" + publicIp + "'");
@@ -32,14 +31,9 @@ module.exports = function(port, messageCb) {
         messageCb(err);
       });
   
-      server.on("close", function() {
-        console.log("Listener closed");
-        messageCb();
-      });
-  
       server.bind(port, localIp);
     });
   });
-}
+};
 
-
+module.exports = listen;

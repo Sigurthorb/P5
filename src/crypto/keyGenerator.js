@@ -4,7 +4,7 @@ let config = require("../config.json");
 
 let generateSymmetricKey = function() {
   return crypto.randomBytes(config.crypto.SymmetricKeySizeBytes).toString("base64");
-}
+};
 
 let generateKeyPair = function(cb) {
   let keys = {};
@@ -23,7 +23,7 @@ let generateKeyPair = function(cb) {
       });
     }
   });
-}
+};
 
 module.exports = {
   generateSymmetricKey: generateSymmetricKey,
