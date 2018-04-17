@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/Sigurthorb/P5#readme",
   "dependencies": {
+    "axios": "^0.18.0",
     "pem": "^1.12.4"
   }
 }
