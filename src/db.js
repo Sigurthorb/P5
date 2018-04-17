@@ -1,5 +1,6 @@
 let db = {
-	topologyServers:[]
+	topologyServers:[],
+	neighbors:[]
 };
 
 module.exports.db = function(){
@@ -19,6 +20,15 @@ module.exports.db = function(){
 
 	this.addTopologyServer = function(newServer){
 		db.topologyServers.push(newServer);
+	};
+
+	this.addNeighbor = function(newNeighbor){
+		db.neighbors.push(newNeighbor);
+	};
+
+	//TO DO Implement
+	this.removeNeighbor = function(neighborIp){
+		
 	};
 
 	this.getNetworkId = function(){

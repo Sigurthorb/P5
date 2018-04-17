@@ -66,7 +66,7 @@ P5Server.prototype.start = function() {
 	  	  //Incoming message from another node 
 	      listener.on("message", function(message, remote) {
 	        //Send it to router (router will forward if necessary)
-	        router.parseMessage(message, remote, db).then(msg => {
+	        router.parseMsg(message, remote, db).then(msg => {
 	        	if(msg) self.emit('newMsg', data);
 	        });
 	      });

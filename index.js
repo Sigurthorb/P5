@@ -7,12 +7,11 @@ var keyGenerator = require("./src/crypto/keyGenerator");
 //topologyServers: Array of IPs or domains of topology server addresses
 //Returns: A promise with a server object
 exports.create = function(topologyServers){
-
 	//Create Topology Network
 	return topology.createNetwork(topologyServers).then( netId => {
 		Generate Keys
 		keyGenerator.generateKeyPair(keys => {
-			let server = new P5Server({
+			var server = new P5Server({
 				networkId:netId, 
 				keys:keys,
 				channel:"",
@@ -25,10 +24,6 @@ exports.create = function(topologyServers){
 		});
 
 	});
-
-
-	//Generate a public/private key combination upon response from topology server
-	
 };
 
 //Joins an Existing P5 Network
