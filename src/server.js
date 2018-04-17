@@ -2,6 +2,7 @@ let externalIp = require('public-ip');
 let internalIp = require('internal-ip');
 let events = require('events');
 let DataBase = require('./db');
+let Router = require('./router');
 
 
 exports.getKey = function(){
@@ -34,6 +35,7 @@ var dgram = require('dgram');
 var P5Server = function(opts) {
 	var listener = dgram.createSocket('udp4');
 	var db = new DataBase();
+	var router = new Router(db);
 
 	//Make this accessible to the user
 	this.key = opts.keys.publicKey;
@@ -66,7 +68,8 @@ P5Server.prototype.start = function() {
 	  	  //Incoming message from another node 
 	      listener.on("message", function(message, remote) {
 	        //Send it to router (router will forward if necessary)
-	        router.parseMsg(message, remote, db).then(msg => {
+	        router.parseMsg(message, remote).then(msg => {
+	        	//Emit newMsg event for the user
 	        	if(msg) self.emit('newMsg', data);
 	        });
 	      });
@@ -83,7 +86,7 @@ P5Server.prototype.start = function() {
 
 	//User Send function
 	this.send = function(message, receiverKey, receiverCh) {
-		router.sendMsg(message, receiverKey, receiverCh, db);
+		router.sendMsg(message, receiverKey, receiverCh);
 	};
 
 	//Stop this server
