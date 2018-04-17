@@ -1,16 +1,4 @@
 // router
-
-let incomingPackets = function(data, senderFun) {
-  // validateBuffer
-  if(util.validPacket(data)) {
-    
-  } else {
-    console.log("Invalid incoming packet");
-    console.log(JSON.stringify(packet, null, 2));
-    console.log("\n");
-  }
-}
-
 module.exports = function Router(db, messageCb) {
   this.db = db;
   this.cb = messageCb;
@@ -41,8 +29,6 @@ module.exports = function Router(db, messageCb) {
     }
   }
 }
-
-listener(33333, incomingPackets);
 
 
 // takes care of decrypting packages
