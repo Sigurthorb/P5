@@ -1,10 +1,26 @@
 // router
+let sender = require("./socketReceiver");
+let listener = require("./socketReceiver");
+
+let incomingPackets = function(data) {
+  // validateBuffer
+  if(util.validPacket(data)) {
+    
+  } else {
+    console.log("Invalid incoming packet");
+    console.log(JSON.stringify(packet, null, 2));
+    console.log("\n");
+  }
+}
 
 let user = {
   "ip": "",
   "port": "",
   "channel": ""
 };
+
+listener(33333, incomingPackets);
+
 
 // takes care of decrypting packages
 // takes care of routing packages to correct neighbors
@@ -58,3 +74,4 @@ let user = {
 
  // Join Packet
  // SYN packet
+

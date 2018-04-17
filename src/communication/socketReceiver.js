@@ -16,11 +16,11 @@ let listen = function(port, messageCb) {
         console.log('\tUDP Server listening on ' + address.address + ":" + address.port + "\n\n");
       });
   
-      server.on("message", function(message, remote) {
+      server.on("message", function(buff, remote) {
         let data = {
           senderAddress: remote.address,
           senderPort: remote.port,
-          message: message
+          buff: buff
         };
         
         messageCb(null, data);
