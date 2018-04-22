@@ -1,0 +1,161 @@
+version: '2'
+services:
+  p5-root:
+    build: .
+    ports:
+     - "3000:3000"
+     - "3001:3001"
+    environment:
+     - ROOT_NODE=TRUE
+     - RECEIVE_PORT=3000
+     - SEND_PORT=3001
+  p5-join1:
+    build: .
+    ports:
+      - "3002:3002"
+      - "3003:3003"
+    environment:
+     - ROOT_NODE=FALSE
+     - RECEIVE_PORT=3002
+     - SEND_PORT=3003
+     - WAIT_CONN=2
+  p5-join2:
+    build: .
+    ports:
+      - "3004:3004"
+      - "3005:3005"
+    environment:
+     - ROOT_NODE=FALSE
+     - RECEIVE_PORT=3004
+     - SEND_PORT=3005
+     - WAIT_CONN=4
+  p5-join3:
+    build: .
+    ports:
+      - "3006:3006"
+      - "3007:3007"
+    environment:
+     - ROOT_NODE=FALSE
+     - RECEIVE_PORT=3006
+     - SEND_PORT=3007
+     - WAIT_CONN=6
+  p5-join4:
+    build: .
+    ports:
+      - "3008:3008"
+      - "3009:3009"
+    environment:
+     - ROOT_NODE=FALSE
+     - RECEIVE_PORT=3008
+     - SEND_PORT=3009
+     - WAIT_CONN=8
+  p5-join5:
+    build: .
+    ports:
+      - "3010:3010"
+      - "3011:3011"
+    environment:
+     - ROOT_NODE=FALSE
+     - RECEIVE_PORT=3010
+     - SEND_PORT=3011
+     - WAIT_CONN=10
+  p5-join6:
+    build: .
+    ports:
+      - "3012:3012"
+      - "3013:3013"
+    environment:
+     - ROOT_NODE=FALSE
+     - RECEIVE_PORT=3012
+     - SEND_PORT=3013
+     - WAIT_CONN=12
+  p5-join7:
+    build: .
+    ports:
+      - "3014:3014"
+      - "3015:3015"
+    environment:
+     - ROOT_NODE=FALSE
+     - RECEIVE_PORT=3014
+     - SEND_PORT=3015
+     - WAIT_CONN=14
+  p5-join8:
+    build: .
+    ports:
+      - "3016:3016"
+      - "3017:3017"
+    environment:
+     - ROOT_NODE=FALSE
+     - RECEIVE_PORT=3016
+     - SEND_PORT=3017
+     - WAIT_CONN=16
+  p5-join9:
+    build: .
+    ports:
+      - "3018:3018"
+      - "3019:3019"
+    environment:
+     - ROOT_NODE=FALSE
+     - RECEIVE_PORT=3018
+     - SEND_PORT=3019
+     - WAIT_CONN=18
+  p5-join10:
+    build: .
+    ports:
+      - "3020:3020"
+      - "3021:3021"
+    environment:
+     - ROOT_NODE=FALSE
+     - RECEIVE_PORT=3020
+     - SEND_PORT=3021
+     - WAIT_CONN=20
+  p5-join11:
+    build: .
+    ports:
+      - "3022:3022"
+      - "3023:3023"
+    environment:
+     - ROOT_NODE=FALSE
+     - RECEIVE_PORT=3022
+     - SEND_PORT=3023
+     - WAIT_CONN=22
+  p5-join12:
+    build: .
+    ports:
+      - "3024:3024"
+      - "3025:3025"
+    environment:
+     - ROOT_NODE=FALSE
+     - RECEIVE_PORT=3024
+     - SEND_PORT=3025
+     - WAIT_CONN=24
+  p5-join13:
+    build: .
+    ports:
+      - "3026:3026"
+      - "3027:3027"
+    environment:
+     - ROOT_NODE=FALSE
+     - RECEIVE_PORT=3026
+     - SEND_PORT=3027
+     - WAIT_CONN=26
+  p5-join14:
+    build: .
+    ports:
+      - "3028:3028"
+      - "3029:3029"
+    environment:
+     - ROOT_NODE=FALSE
+     - RECEIVE_PORT=3028
+     - SEND_PORT=3029
+     - WAIT_CONN=28
+  p5-join15:
+    build: .
+    ports:
+      - "3030:3030"
+      - "3031:3031"
+    environment:
+     - ROOT_NODE=FALSE
+     - RECEIVE_PORT=3030
+     - SEND_PORT=3031
+     - WAIT_CONN=30
