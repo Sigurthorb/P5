@@ -17,8 +17,11 @@
   },
   "homepage": "https://github.com/Sigurthorb/P5#readme",
   "dependencies": {
-    "binary-parser-encoder": "^1.3.2",
     "axios": "^0.18.0",
-    "pem": "^1.12.4"
+    "binary-parser-encoder": "^1.3.2",
+    "internal-ip": "^3.0.1",
+    "pem": "^1.12.4",
+    "public-ip": "^2.4.0",
+    "random-number-csprng": "^1.0.2"
   }
 }
