@@ -10,7 +10,8 @@ module.exports = function(){
       communication: "",
       subscribed: "",
       routing: []
-    }
+    },
+    isRootNode: false
 	};
   /************************* TOPOLOGY *************************/
   /*
@@ -70,6 +71,14 @@ module.exports = function(){
     return data.address;
   }
 
+  this.setStartupAsRoot = function() {
+    data.isRootNode = true;
+  }
+
+  this.isRoot = function() {
+    return data.isRootNode;
+  }
+
   /************************* NEIGHBORS **************************/
   // sendPort is the port this neighbor sends from
   // receivePort is the port this neighbor receives on
@@ -95,7 +104,11 @@ module.exports = function(){
 
   this.getNeighbors = function() {
     return data.neighbors;
-  } 
+  }
+
+  this.getNeighborsCount = function() {
+    return data.neighbors.length;
+  }
 
   this.getChildren = function() {
     return data.children;
@@ -107,10 +120,10 @@ module.exports = function(){
 
 	this.addNeighbor = function(address, sendPort, receivePort) {
 
-    return new Promise(resolve, reject => {
+    return new Promise( (resolve, reject) => {
       let newNeighbor = {
         address: address,
-        channel: data.getCommChannel(),
+        channel: data.channels.communication,
         sendPort: sendPort,
         receivePort: receivePort
       };
@@ -154,17 +167,23 @@ module.exports = function(){
 
   this.getNeighborRoutingData = function(sender) {
     let result = {
-      candidates: []
-    }
+      candidates: [],
+      sender: null,
+      fromParent: false
+    };
 
-    if(isSenderEqual(data.parent, sender)) {
-      result.sender = data.parent;
-      reuslt.fromParent = true;
-    } else {
-      result.candidates.push(data.parent);
-      reuslt.fromParent = false;
+    if(data.parent) {
+      if(isSenderEqual(data.parent, sender)) {
+        result.sender = data.parent;
+        result.fromParent = true;
+      } else {
+        result.candidates.push(data.parent);
+        result.fromParent = false;
+      }
     }
-
+    console.log("\n\nneighbors\n")
+    console.log(JSON.stringify(data.neighbors, null, 2));
+    console.log("\n\n");
     for(let i = 0; i < data.children.length; i++) {
       if(!isSenderEqual(data.children[i], sender)) {
         result.candidates.push(data.children[i]);
@@ -205,5 +224,5 @@ module.exports = function(){
 /************************* HELPERS **************************/
 
 let isSenderEqual = function(candidate, sender) {
-  return candidate.address === sender.address && candidate.sendPort === sender.sendPort;
+  return candidate.address === sender.address && candidate.sendPort === sender.port;
 }

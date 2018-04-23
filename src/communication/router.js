@@ -1,5 +1,7 @@
 // router
 var dgram = require('dgram');
+let externalIp = require('public-ip');
+let internalIp = require('internal-ip');
 let packetHandler = require("./packetHandler");
 let validator = require("../validator");
 let util = require("../util");
@@ -21,6 +23,7 @@ let getCandidatesToSendTo = function(candidates, channel) {
 module.exports = function Router(db, messageCb) {
   let client = dgram.createSocket('udp4');
   client.bind(db.getSendPort());
+
   let send = function(host, port, message) {
     client.send(message, 0, message.length, port, host, function(err) {
       console.log('UDP message sent to ' + host +':'+ port);
@@ -39,7 +42,7 @@ module.exports = function Router(db, messageCb) {
       parentInfo: {
         channel: db.getCommChannel(),
         address: db.getAddress(),
-        senderPort: db.getSenderPort(),
+        sendPort: db.getSendPort(),
         receivePort: db.getReceivePort()
       }
     }
@@ -52,7 +55,7 @@ module.exports = function Router(db, messageCb) {
 
     if(candidates.length === 0) {
       // Only enters here if message is going out of nodes channel
-      let parent = data.getParent();
+      let parent = db.getParent();
       if(!parent) {
         // Only happens if root node and there is no node on the branch where the message needs to be routed
         console.log("ERROR: No nodes to send message to");
@@ -67,11 +70,14 @@ module.exports = function Router(db, messageCb) {
   }
 
   let processSynPacket = function(packetObj, routingData) {
-    let candidates = db.getCandidates(routingData.candidates, packetObj.channel);
+    let candidates = getCandidatesToSendTo(routingData.candidates, packetObj.channel);
     
     for(let i = 0; i < candidates.length; i++) {
+      console.log("SENDING MESSAGE TO CANDIDATE")
       sendPacketObject(packetObj, candidates[i]);
     }
+
+    messageCb(packetObj);
   }
 
   let processDataPacket = function(packetObj, routingData) {
@@ -81,33 +87,40 @@ module.exports = function Router(db, messageCb) {
 
   /*
   Thoughts:
-  * what if the channel to be joined doesnt exist, but could be created with the new node. Should that be allowed? 0 security level -- second if
+  * If there is no node that represents a channel, a node cannot join that channel
+       * Simplifies joining
   
 
   */
 
   let processJoinPacket = function(packetObj, routingData) {
     if(packetObj.channel === db.getCommChannel() || (routingData.fromParent && db.getSubChannel() === packetObj.channel)) {
-      if(data.getNeighbors().length > 2) {
+      if(db.getNeighborsCount() > 2) {
         // children saturated, random pick child to forward to
         util.getRandomNum(0,1).then(num => {
           let nextCandidate = packetObj.getNeighbors[num + 1];
           // OUTGOING PACKET
           sendPacketObject(packetObj, nextCandidate);
+        }).catch(err => {
+          console.log("ERROR RAND NUM: ", err);
         });
       } else {
         // Need to talk about this scenario.
         // How do we acctually add him, do we ping him and wait for a message?
-        // Do we send him which is the join?
+        // Do we send him which is the join? This is the current approach
         // Can add new neighbor
         let newNeighbor = JSON.parse(packetObj.data.toString());
         let publicKey = newNeighbor.publicKey; // for later
-        let senderPort = newNeighbor.senderPort;
+        let sendPort = newNeighbor.sendPort;
         let receivePort = newNeighbor.receivePort; // this will need to be the same at joining and after joining
         let address = newNeighbor.address;
   
-        data.addNeighbor(address, senderPort, receivePort).then((newNeighbor) => {
+        db.addNeighbor(address, sendPort, receivePort).then((newNeighbor) => {
           sendJoinInviteToCandidateNode(newNeighbor);
+          console.log("AddedNeighbor");
+          console.log(JSON.stringify(newNeighbor,null, 2));
+        }).catch(err => {
+          console.log("ERROR: Adding neightbor failure - ", err);
         });
       }
     } else if(packetObj.channel.startsWith(db.getCommChannel())) {
@@ -143,7 +156,7 @@ module.exports = function Router(db, messageCb) {
       // Only thing left is to route up
 
       // OUTGOING PACKET
-      sendPacketObject(packetObj, data.getParent());
+      sendPacketObject(packetObj, db.getParent());
     } else {
         console.log("ERROR: PROCESSING JOIN PACKET, MISSING CASE");
         console.log("\troutingData: ", JSON.stringify(routingData, null, 2));
@@ -157,17 +170,20 @@ module.exports = function Router(db, messageCb) {
       console.log("PARENT HAS LEFT THE NETWORK, NEED TO REJOIN");
     } else {
       // Received leave from child, remove from neighbors
-      let leaver = data.removeNeighbor(routingData.sender.address);
+      let leaver = db.removeNeighbor(routingData.sender.address);
       // Nothing else needed to be done?
     }
   }
 
   this.parseMsg = function(message, remote) {
-    let routingData = getNeighborRoutingData(remote);
+    let routingData = db.getNeighborRoutingData(remote);
+    console.log("Received message from ", remote);
+    console.log("Routing data is as follows", routingData);
 
     if(!routingData.sender) {
       // Here we could receive the join message once we have identified we are a candidate parent node after received JOIN
       console.log("WARNING: message from unknown neighbor - ignoring message");
+      console.log(remote);
       return;
     }
 
@@ -194,7 +210,7 @@ module.exports = function Router(db, messageCb) {
     {
       publicKey: string // not used for now
       address: string
-      senderPort: number
+      sendPort: number
       receivePort: number
     }
   */
@@ -236,58 +252,57 @@ module.exports = function Router(db, messageCb) {
       sendPacketObject(packetObj, candidates[i]);
     }
   }
+
+  let waitForJoin = !db.isRoot();
+  let parseMsg = this.parseMsg;
+
+  	//Get the public and local ip's before starting the listener
+	externalIp.v4().then(publicIp => {
+    internalIp.v4().then(localIp => {
+      let listener = dgram.createSocket('udp4');
+      console.log("Your public IP address is '" + publicIp + "'");
+      console.log("Your local IP address is '" + localIp + "'");
+      console.log("Make sure to route UDP port '" + db.getReceivePort() + "' to your local IP address");
+      console.log("\n\n");
+      
+      //self.db.setAddress(publicIp);
+      db.setAddress(localIp);
+  
+      listener.on("listening", function() {
+        let address = listener.address();
+        console.log('\tUDP Server listening on ' + address.address + ":" + address.port + "\n\n");
+      });
+  
+      //Incoming message from another node 
+      listener.on("message", function(message, remote) {
+        console.log("message");
+        console.log(message);
+        if(waitForJoin) {
+          let invite = JSON.parse(message.toString());
+          console.log("GOT INVITE");
+          console.log(invite);
+
+          // TEMP TEST CODE:::
+          setTimeout(function(){
+            messageCb("Joined");
+          },3000);
+
+          let parent = invite.parentInfo;
+          db.setParent(parent.address, parent.sendPort, parent.receivePort, parent.channel);
+          db.setCommChannel(invite.commChannel);
+          waitForJoin = false;
+          return;
+        }
+        //Send it to router
+        parseMsg(message, remote);
+      });
+  
+      listener.on("error", function(err) {
+        console.error("Socket server error: ", err.message, "\nerr:", err);
+      });
+
+      //Start Listener
+      listener.bind(db.getReceivePort(), localIp);
+    });
+  });
 }
-
-
-// takes care of decrypting packages
-// takes care of routing packages to correct neighbors
-
- /*
- * Buffer size = 1024 bytes
- * Current expected buffer structure: 
- * [inclusive]
- * bit 1 - 2      PacketType(00: DATA, 01: SYN, 10: JOIN, 11: LEAVE) 2 bits
- * bit 3 - 34     channel b unsigned int - bit format 32 bits
- * bit 35 - 40    bitmask lenght  m int 6 bits
- * bit 41 - 81    Headder Padding;
- * bit 82 - 8192  OTHER DATA
- */
-
- /*
- * SYN packet OTHER DATA - 
- *  First chunk: encrypted will be 512 bits
- *    symmetric key  - 256 bits
- *    sender channel - 32 bit
- *    sender bitmask - 6 bits
- *    checksum       - 16 bits
- *    message:       - x bits
- *    - padding of messages
- */
-
- /*
- * DATA packet OTHER DATA
- *    - message
- * 
- * 
- * 
- */
-
-/*
- * JOIN packet OTHER DATA
- *   candidate: ""
- * 
- * 
- */
-
-// candidate parent receiveves the join packet
-// takes the ip address and sends a message to the child.
-// if not in neighbors .. we know that it is a new connection.
-
-// create a generic public key that can be used during joining.
- /*{
-   "position": ""
-   "bitmask": "",
- }*/
-
- // Join Packet
- // SYN packet
