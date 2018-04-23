@@ -26,3 +26,39 @@ In that message is encrypted with users public key and includes the following.
 The symmetricKey in the join message is there to encrypt join and leave packages.
 This in terms hides join requests info from global listener, Parent allocates a symmentric key for each of its children.
 With this approach, the confirmation of a join can be done by sending a symmetricly encrypted JOIN message up the tree since JOIN messages are only suppose to come from the root.
+
+
+
+When Joining:
+
+Contact a node for topology information. (ip, port, networkId)
+request topology from topology server
+Decides on channel
+
+candidateNode sends a post message to JoinHandlerNode containing
+{
+  tempPublicKey
+  httpPort
+  address
+}
+
+ParentCandidate sends a http request to the candidateNode
+
+{
+  commChannel: (joining nodes communication channel allocated by parent),
+  symmetricKey: 
+  parentInfo: {
+    channel:
+    address:
+    sendPort:
+    receivePort:
+}
+
+CandidateNode responds with:
+{
+  address
+  sendPort
+  receivePort
+}
+
+candidateNode, joinHandlerNode, parentCandidate

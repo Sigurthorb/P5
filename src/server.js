@@ -11,7 +11,22 @@ var dgram = require('dgram');
 //This is the contructor
 var P5Server = function(opts) {
   this.db = new DataBase();
-  let router = new Router(this.db);
+  let envt = new EventEmitter();
+  this.prototype = envt;
+  let router = new Router(this.db, envt);
+
+  this.prototype.sendStringMsg = function(obj) {
+    // validation
+    try {
+      router.sendMsg(); // TAKES A BUFFER
+    } catch(err) {
+
+    }
+  
+    
+  };
+
+  //router.sendMsg()
 
   if(opts.root) {
     this.waitingConnection = false;
@@ -31,7 +46,8 @@ var P5Server = function(opts) {
 	this.db.setKeys(opts.keys);
 };
 
-//P5Server.prototype = new EventEmitter();
+
+P5Server.prototype = new EventEmitter();
 
 P5Server.prototype.start = function() {
 	self = this;

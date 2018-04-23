@@ -14,3 +14,10 @@ exports.createNetwork = function(servers){
 	}
 
 };
+
+exports.joinNetwork;
+
+exports.getTopology;
+
+exports.leaveNetwork;
+

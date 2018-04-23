@@ -168,6 +168,7 @@ module.exports = function Router(db, messageCb) {
   let processLeavePacket = function(packetObj, routingData) {
     if(routingData.fromParent) {
       console.log("PARENT HAS LEFT THE NETWORK, NEED TO REJOIN");
+      //propagate down the tree
     } else {
       // Received leave from child, remove from neighbors
       let leaver = db.removeNeighbor(routingData.sender.address);
@@ -211,7 +212,8 @@ module.exports = function Router(db, messageCb) {
       publicKey: string // not used for now
       address: string
       sendPort: number
-      receivePort: number
+      receivePort: number,
+      isValid: true
     }
   */
   this.sendJoinMsg = function(channel, data) {
