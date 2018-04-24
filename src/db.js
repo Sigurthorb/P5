@@ -118,43 +118,20 @@ module.exports = function(){
     return data.parent;
   }
 
-	this.addNeighbor = function(address, sendPort, receivePort) {
+	this.addChild = function(address, sendPort, receivePort, childPostFix) {
+    let newNeighbor = {
+      address: address,
+      channel: data.channels.communication + childPostfix,
+      sendPort: sendPort,
+      receivePort: receivePort
+    };
 
-    return new Promise( (resolve, reject) => {
-      let newNeighbor = {
-        address: address,
-        channel: data.channels.communication,
-        sendPort: sendPort,
-        receivePort: receivePort
-      };
-
-      if(data.children.length === 0) {
-        // No neighbors, randomizing its channel
-        util.getRandomNum(0,1).then(num => {
-          newNeighbor.channel += num;
-          data.neighbors.push(newNeighbor);
-          data.children.push(newNeighbor);
-          resolve(newNeighbor);
-        });
-      } else if(data.children.length == 1) {
-        // One neighbor, assigning different channel that child
-        if(data.children[0].channel[data.children[0].channel.length - 1] === "0") {
-          newNeighbor.channel += "1";
-        } else {
-          newNeighbor.channel += "0";
-        }
-        data.neighbors.push(newNeighbor);
-        data.children.push(newNeighbor);
-        resolve(newNeighbor);
-      } else {
-        // What To DO?
-        // should not happen from the router
-        reject();
-      }
-    });
+    data.neighbors.push(newNeighbor);
+    data.children.push(newNeighbor);
   };
   
 	this.removeChild = function(neighborIp) {
+    // This might be a problem if nodes share same ip (localhost)
     let childIndex = data.children.map(n => n.address).indexOf(neighborIp);
     let neighborIndex = data.neighbors.map(n => n.address).indexOf(neighborIp);
     

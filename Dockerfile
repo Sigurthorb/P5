@@ -6,6 +6,7 @@ RUN apt-get update && \
     build-essential \
     software-properties-common \
     libssl-dev \
+    openssl \
     curl \
     git \
     wget
