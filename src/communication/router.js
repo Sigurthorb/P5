@@ -8,21 +8,21 @@ let validator = require("../validator");
 let util = require("../util");
 let joinClient = require("../joinClient");
 
-let isDestinedForChannel = function(nodeChannel, destinationChannel) {
-  return nodeChannel.startsWith(destinationChannel) || destinationChannel.startsWith(nodeChannel);
+let isDestinedForNode = function(nodePosition, destinationChannel) {
+  return nodePosition.startsWith(destinationChannel) || destinationChannel.startsWith(nodePosition);
 }
 
 let getCandidatesToSendTo = function(candidates, channel) {
   let result = [];
   for(let i = 0; i < candidates.length; i++) {
-    if(isDestinedForChannel(candidates[i].channel, channel)) {
+    if(isDestinedForNode(candidates[i].position, channel)) {
       result.push(candidates[i]);
     }
   }
   return result;
 }
 
-module.exports = function Router(db, messageCb) {
+module.exports = function Router(db, emitter) {
   let client = dgram.createSocket('udp4');
   let listener = dgram.createSocket('udp4');
   client.bind(db.getSendPort());
@@ -47,16 +47,16 @@ module.exports = function Router(db, messageCb) {
     send(destNeighbor.address, destNeighbor.receivePort, packet);
   }
 
-  let addChild = function(address, port, address, childPosChannel, newPostFix) {
+  let addChild = function(address, port, address, childPosition) {
     let symmetricKey = "SoonToBeGenerated";
-    log("info", "Sending a join invitiation to candidate child with position channel %s", childPosChannel);
-    joinClient.addChild(address, port, childPosChannel, db.getSendPort(), db.getReceivePort(), symmetricKey).then((obj) => {
-      log("debug", "Successfully send request to candidateChannel %s");
-      db.addChild(obj.address, obj.sendPort, obj.receivePort, newPostFix);
+    log("info", "Sending a join invitiation to candidate child with position channel %s", childPosition);
+    joinClient.addChild(address, port, childPosition, db.getSendPort(), db.getReceivePort(), symmetricKey).then((obj) => {
+      log("debug", "Successfully sent ParentRequest to candidate channel %s");
+      db.addChild(obj.address, obj.sendPort, obj.receivePort, childPosition, symmetricKey);
     }).catch((err) => {
       log("error", "Failed to add child with error: %s", err.message, err);
-    })
-  }
+    });
+  };
 
   let getCandidates = function(lst, channel) {
     let candidates = getCandidatesToSendTo(lst, channel);
@@ -67,25 +67,25 @@ module.exports = function Router(db, messageCb) {
       if(!parent) {
         // Only happens if root node and there is no node on the branch where the message needs to be routed
         console.log("ERROR: No nodes to send message to");
-        console.log("\tNeighbors: ", JSON.stringify(data.getNeighbors(), null, 2));
-        console.log("\tChannel: ", channel);
+        console.log("\tNeighbors: ", JSON.stringify(db.getNeighbors(), null, 2));
+        console.log("\tChannel: '" + channel + "'");
         return [];
       }
       candidates.push(parent);
     }
 
     return candidates;
-  }
+  };
 
   let processSynPacket = function(packetObj, routingData) {
     let candidates = getCandidatesToSendTo(routingData.candidates, packetObj.channel);
     
     for(let i = 0; i < candidates.length; i++) {
-      console.log("SENDING MESSAGE TO CANDIDATE")
+      console.log("SENDING MESSAGE TO CANDIDATE");
       sendPacketObject(packetObj, candidates[i]);
     }
 
-    messageCb(packetObj);
+    emitter.emit("message", packetObj);
   }
 
   let processDataPacket = function(packetObj, routingData) {
@@ -95,7 +95,9 @@ module.exports = function Router(db, messageCb) {
   let processJoinPacket = function(packetObj, routingData) {
     // Make it so that the spot is reserved until someone joins the network
     // Propagate up if this node is fully reserved
-    if(packetObj.channel === db.getCommChannel() || (routingData.fromParent && db.getSubChannel() === packetObj.channel)) {
+    let position = db.getPosition();
+    console.log(packetObj);
+    if(packetObj.channel === position || (routingData.fromParent && db.getChannel() === packetObj.channel)) {
       let childCount = db.getChildrenCount();
       if(childCount == 2) {
         // children saturated, random pick child to forward to
@@ -113,26 +115,26 @@ module.exports = function Router(db, messageCb) {
         let newNeighbor = JSON.parse(packetObj.data.toString());
         let port = newNeighbor.port;
         let address = newNeighbor.address;
-        let newPostFix = 0;
 
          if(db.getChildrenCount() == 1) {
-          newPostFix = 1 - db.getChildren()[0].postFix
-          addChild(address, port, address, db.getCommChannel() + newPostFix, newPostFix);
+          let child = db.getChildren()[0];
+          newPostFix = 1 - child.position[child.position.length - 1];
+          addChild(address, port, address, position + newPostFix);
         } else {
           util.getRandomNum(0,1).then(newPostFix => {
-            addChild(address, port, address, db.getCommChannel() + newPostFix, newPostFix);
+            addChild(address, port, address, position + newPostFix);
           });
         }
       }
-    } else if(packetObj.channel.startsWith(db.getCommChannel())) {
+    } else if(packetObj.channel.startsWith(position)) {
       // Being routed, needs to go further down
-      // select applicable child that starts with data.channel
+      // select applicable child that starts with data.position
       
       let candidates = db.getChildren();
       let candidate = undefined;
       for(let i = 0; i < candidates.length; i++) {
         if(candidates[i]) {
-          candidate = packetObj.channel.startsWith(candidates[i].channel);
+          candidate = packetObj.channel.startsWith(candidates[i].position);
           break;
         }
       }
@@ -183,7 +185,6 @@ module.exports = function Router(db, messageCb) {
     console.log("Routing data is as follows", routingData);
 
     if(!routingData.sender) {
-      // Here we could receive the join message once we have identified we are a candidate parent node after received JOIN
       console.log("WARNING: message from unknown neighbor - ignoring message");
       console.log(remote);
       return;
@@ -207,11 +208,10 @@ module.exports = function Router(db, messageCb) {
     }
   }
 
-  this.sendJoinMsg = function(channel, port, address) {
+  this.sendJoinMsg = function(address, port, channel) {
     let data = {
       address: address,
-      port: port,
-      valid: true
+      port: port
     };
 
     let packetObj = {
@@ -219,6 +219,7 @@ module.exports = function Router(db, messageCb) {
       channel: channel,
       data: Buffer.from(JSON.stringify(data))
     };
+
     processJoinPacket(packetObj, {fromParent: false});
   }
 
@@ -227,12 +228,13 @@ module.exports = function Router(db, messageCb) {
     // Leave msg sent from parent to children to notify them to leave
     let packetObj = {
       packetType: "LEAVE",
-      channel: db.getCommChannel(),
+      channel: db.getPosition(),
       data: Buffer.from("")
     };
 
-    if(db.getParent()) {
-      sendPacketObject(packetObj, db.getParent());
+    let parent = db.getParent()
+    if(parent) {
+      sendPacketObject(packetObj, parent);
     }
     processLeavePacket(packetObj, {fromParent: true});
   }

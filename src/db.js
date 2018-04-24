@@ -6,11 +6,8 @@ module.exports = function(){
     parent: undefined, // parent node
     neighbors: [], // all nodes (duplicated for faster processing)
     children: [], // children nodes
-    channels: {
-      communication: "",
-      subscribed: "",
-      routing: []
-    },
+    channel: "",
+    position: "",
     isRootNode: false
 	};
   /************************* TOPOLOGY *************************/
@@ -86,7 +83,7 @@ module.exports = function(){
   // Parent is parent node
   // Children are children node
   // Neighbors are all nodes
-  this.setParent = function(address, sendPort, receivePort, channel) {
+  this.setParent = function(address, sendPort, receivePort, position) {
     if(data.parent) {
       let index = data.neighbors.map(n => n.address).indexOf(data.parent.address);
       if(index >= 0)
@@ -96,7 +93,7 @@ module.exports = function(){
       address: address,
       sendPort: sendPort,
       receivePort: receivePort,
-      channel: channel
+      position: position
     };
 
     data.neighbors.push(data.parent);
@@ -118,27 +115,27 @@ module.exports = function(){
     return data.parent;
   }
 
-	this.addChild = function(address, sendPort, receivePort, childPostFix) {
+	this.addChild = function(address, sendPort, receivePort, position, symmetricKey) {
     let newNeighbor = {
       address: address,
-      channel: data.channels.communication + childPostfix,
+      position: position,
       sendPort: sendPort,
-      receivePort: receivePort
+      receivePort: receivePort,
+      symmetricKey: symmetricKey
     };
 
     data.neighbors.push(newNeighbor);
     data.children.push(newNeighbor);
   };
   
-	this.removeChild = function(neighborIp) {
-    // This might be a problem if nodes share same ip (localhost)
-    let childIndex = data.children.map(n => n.address).indexOf(neighborIp);
-    let neighborIndex = data.neighbors.map(n => n.address).indexOf(neighborIp);
+	this.removeChild = function(address, sendPort) {
+    let childIndex = data.children.findIndex(c => c.address === address && c.sendPort === sendPort);
+    let neighborIndex = data.neighbors.findIndex(n => n.address === address && n.sendPort === sendPort);
     
-    if(childIndex >= 0) {
-      // Returns removed neighbor
+    if(childIndex >= 0 && neighborIndex >= 0) {
+      // Returns removed child
       data.children.splice(childIndex, 1);
-      return data.neighbors.splice(index, 1);
+      return data.neighbors.splice(neighborIndex, 1);
     }
   };
 
@@ -158,9 +155,7 @@ module.exports = function(){
         result.fromParent = false;
       }
     }
-    console.log("\n\nneighbors\n")
-    console.log(JSON.stringify(data.neighbors, null, 2));
-    console.log("\n\n");
+
     for(let i = 0; i < data.children.length; i++) {
       if(!isSenderEqual(data.children[i], sender)) {
         result.candidates.push(data.children[i]);
@@ -173,20 +168,20 @@ module.exports = function(){
   }
 
   /************************* CHANNEL **************************/
-  this.setCommChannel = function(communicationChannel) {
-    data.channels.communication = communicationChannel;
+  this.setPosition = function(position) {
+    data.position = position;
   }
 
-  this.getCommChannel = function() {
-    return data.channels.communication;
+  this.getPosition = function() {
+    return data.position;
   }
 
-  this.setSubChannel = function(subscribedChannel) {
-    data.channels.subscribed = subscribedChannel;
+  this.setChannel = function(channel) {
+    data.channel = channel;
   }
 
-  this.getSubChannel = function() {
-    return data.channels.subscribed;
+  this.getChannel = function() {
+    return data.channel;
   }
   /************************ ENCRYPTION ************************/
 	this.getKeys = function(){
@@ -201,5 +196,5 @@ module.exports = function(){
 /************************* HELPERS **************************/
 
 let isSenderEqual = function(candidate, sender) {
-  return candidate.address === sender.address && candidate.sendPort === sender.port;
+  return candidate.address === sender.address && candidate.sendPort === sender.port; // sender is remote object
 }

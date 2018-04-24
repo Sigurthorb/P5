@@ -6,7 +6,7 @@ let db = new DB();
 db.setStartupAsRoot();
 db.setReceivePort(3333);
 db.setSendPort(3334);
-db.setSubChannel("");
+db.setChannel("");
 
 
 
@@ -30,10 +30,10 @@ let join2 = {
 
 setTimeout(function() {
   console.log("sending join1");
-  router.sendJoinMsg("", join1);
+  router.sendJoinMsg("192.168.1.8", 3335, "");
   setTimeout(function() {
     console.log("sending join2");
-    router.sendJoinMsg("", join2);
+    router.sendJoinMsg("192.168.1.8", 3337, "");
   }, 1000);
 }, 2000);
 
