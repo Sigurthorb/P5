@@ -38,7 +38,7 @@ Decides on channel
 candidateNode sends a post message to JoinHandlerNode containing
 {
   tempPublicKey
-  httpPort
+  port
   address
 }
 

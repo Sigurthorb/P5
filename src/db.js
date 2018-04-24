@@ -106,12 +106,12 @@ module.exports = function(){
     return data.neighbors;
   }
 
-  this.getNeighborsCount = function() {
-    return data.neighbors.length;
-  }
-
   this.getChildren = function() {
     return data.children;
+  }
+
+  this.getChildrenCount = function() {
+    return data.children.length;
   }
 
   this.getParent = function() {

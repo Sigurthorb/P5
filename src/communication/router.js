@@ -22,6 +22,7 @@ let getCandidatesToSendTo = function(candidates, channel) {
 
 module.exports = function Router(db, messageCb) {
   let client = dgram.createSocket('udp4');
+  let listener = dgram.createSocket('udp4');
   client.bind(db.getSendPort());
 
   let send = function(host, port, message) {
@@ -36,7 +37,12 @@ module.exports = function Router(db, messageCb) {
     send(destNeighbor.address, destNeighbor.receivePort, packet);
   }
 
+  let sendPacket = function(packet, destNeighbor) {
+    send(destNeighbor.address, destNeighbor.receivePort, packet);
+  }
+
   let sendJoinInviteToCandidateNode = function(candidate) {
+    // TODO: call joinClient to invite user
     let nodeInfo = {
       commChannel: candidate.channel,
       parentInfo: {
@@ -47,7 +53,7 @@ module.exports = function Router(db, messageCb) {
       }
     }
 
-    send(candidate.address, candidate.receivePort, Buffer.from(JSON.stringify(nodeInfo)));
+    //send(candidate.address, candidate.receivePort, Buffer.from(JSON.stringify(nodeInfo)));
   }
 
   let getCandidates = function(lst, channel) {
@@ -84,44 +90,38 @@ module.exports = function Router(db, messageCb) {
 
   }
 
-
-  /*
-  Thoughts:
-  * If there is no node that represents a channel, a node cannot join that channel
-       * Simplifies joining
-  
-
-  */
-
   let processJoinPacket = function(packetObj, routingData) {
     if(packetObj.channel === db.getCommChannel() || (routingData.fromParent && db.getSubChannel() === packetObj.channel)) {
-      if(db.getNeighborsCount() > 2) {
+      if(db.getChildrenCount() == 2) {
         // children saturated, random pick child to forward to
-        util.getRandomNum(0,1).then(num => {
-          let nextCandidate = packetObj.getNeighbors[num + 1];
-          // OUTGOING PACKET
-          sendPacketObject(packetObj, nextCandidate);
-        }).catch(err => {
-          console.log("ERROR RAND NUM: ", err);
+        util.getRandomNum(0,1).then(pick => {
+          let otherPick = 1 - pick;
+          let children = packetObj.getChildren();
+          // OUTGOING PACKETS
+          sendPacketObject(packetObj, children[pick]);
+          packetObj.valid = false;
+          sendPacketObject(packetObj, children[otherPick]);
         });
       } else {
-        // Need to talk about this scenario.
-        // How do we acctually add him, do we ping him and wait for a message?
-        // Do we send him which is the join? This is the current approach
-        // Can add new neighbor
+        // SELECTED AS PARENT
         let newNeighbor = JSON.parse(packetObj.data.toString());
         let publicKey = newNeighbor.publicKey; // for later
         let sendPort = newNeighbor.sendPort;
         let receivePort = newNeighbor.receivePort; // this will need to be the same at joining and after joining
         let address = newNeighbor.address;
-  
-        db.addNeighbor(address, sendPort, receivePort).then((newNeighbor) => {
-          sendJoinInviteToCandidateNode(newNeighbor);
-          console.log("AddedNeighbor");
-          console.log(JSON.stringify(newNeighbor,null, 2));
-        }).catch(err => {
-          console.log("ERROR: Adding neightbor failure - ", err);
-        });
+
+        sendJoinInviteToCandidateNode(newNeighbor).then(() => {
+          db.addNeighbor(address, sendPort, receivePort).then((newNeighbor) => {
+            console.log("AddedNeighbor");
+            console.log(JSON.stringify(newNeighbor,null, 2));
+          }).catch(err => {
+            console.log("ERROR: Adding neightbor failure - ", err);
+          });
+        }).catch(() => {
+          console.log("FAILED TO SEND JOIN TO CANDIDATE: ");
+          console.log(JSON.stringify(newNeighbor, null, 2));
+        })
+
       }
     } else if(packetObj.channel.startsWith(db.getCommChannel())) {
       // Being routed, needs to go further down
@@ -216,7 +216,14 @@ module.exports = function Router(db, messageCb) {
       isValid: true
     }
   */
-  this.sendJoinMsg = function(channel, data) {
+  this.sendJoinMsg = function(channel, publicKey, port, address) {
+    let data = {
+      publicKey: publicKey,
+      address: address,
+      port: port,
+      valid: true
+    };
+
     let packetObj = {
       packetType: "JOIN",
       channel: channel,
@@ -225,7 +232,7 @@ module.exports = function Router(db, messageCb) {
     processJoinPacket(packetObj, {fromParent: false});
   }
 
-  this.leaveNetwork = function() {
+  let leaveNetwork = function() {
     // Leave msg sent from a child to parent to remove them from neighbors.
     // Leave msg sent from parent to children to notify them to leave
     let packetObj = {
@@ -255,56 +262,52 @@ module.exports = function Router(db, messageCb) {
     }
   }
 
-  let waitForJoin = !db.isRoot();
   let parseMsg = this.parseMsg;
+  let serverListening = false;
 
-  	//Get the public and local ip's before starting the listener
-	externalIp.v4().then(publicIp => {
-    internalIp.v4().then(localIp => {
-      let listener = dgram.createSocket('udp4');
-      console.log("Your public IP address is '" + publicIp + "'");
-      console.log("Your local IP address is '" + localIp + "'");
-      console.log("Make sure to route UDP port '" + db.getReceivePort() + "' to your local IP address");
-      console.log("\n\n");
+  this.destroy = function() {
+    // stop listener
+  }
+
+  this.startListen = function() {
+    if(!serverListening) {
+      //Get the public and local ip's before starting the listener
+      externalIp.v4().then(publicIp => {
+        internalIp.v4().then(localIp => {
+          
+          console.log("Your public IP address is '" + publicIp + "'");
+          console.log("Your local IP address is '" + localIp + "'");
+          console.log("Make sure to route UDP port '" + db.getReceivePort() + "' to your local IP address");
+          console.log("\n\n");
+          
+          //self.db.setAddress(publicIp);
+          db.setAddress(localIp);
       
-      //self.db.setAddress(publicIp);
-      db.setAddress(localIp);
-  
-      listener.on("listening", function() {
-        let address = listener.address();
-        console.log('\tUDP Server listening on ' + address.address + ":" + address.port + "\n\n");
+          listener.on("listening", function() {
+            let address = listener.address();
+            console.log('\tUDP Server listening on ' + address.address + ":" + address.port + "\n\n");
+          });
+      
+          //Incoming message from another node 
+          listener.on("message", function(message, remote) {
+            //Send it to router
+            parseMsg(message, remote);
+          });
+      
+          listener.on("error", function(err) {
+            console.error("Socket server error: ", err.message, "\nerr:", err);
+          });
+    
+          //Start Listener
+          listener.bind(db.getReceivePort(), localIp);
+        });
       });
-  
-      //Incoming message from another node 
-      listener.on("message", function(message, remote) {
-        console.log("message");
-        console.log(message);
-        if(waitForJoin) {
-          let invite = JSON.parse(message.toString());
-          console.log("GOT INVITE");
-          console.log(invite);
+    }
+  }
 
-          // TEMP TEST CODE:::
-          setTimeout(function(){
-            messageCb("Joined");
-          },3000);
-
-          let parent = invite.parentInfo;
-          db.setParent(parent.address, parent.sendPort, parent.receivePort, parent.channel);
-          db.setCommChannel(invite.commChannel);
-          waitForJoin = false;
-          return;
-        }
-        //Send it to router
-        parseMsg(message, remote);
-      });
-  
-      listener.on("error", function(err) {
-        console.error("Socket server error: ", err.message, "\nerr:", err);
-      });
-
-      //Start Listener
-      listener.bind(db.getReceivePort(), localIp);
+  this.stopListen = function() {
+    listener.close(function() {
+      serverListening = false;
     });
-  });
+  }
 }
