@@ -1,4 +1,5 @@
 let util = require("./util");
+let ursa = require("ursa");
 
 module.exports = function(){
 	let data = {
@@ -8,7 +9,9 @@ module.exports = function(){
     children: [], // children nodes
     channel: "",
     position: "",
-    isRootNode: false
+    isRootNode: false,
+    symmetricKeys: [],
+    asymmetricKeys: undefined
 	};
   /************************* TOPOLOGY *************************/
   /*
@@ -83,9 +86,9 @@ module.exports = function(){
   // Parent is parent node
   // Children are children node
   // Neighbors are all nodes
-  this.setParent = function(address, sendPort, receivePort, position) {
+  this.setParent = function(address, sendPort, receivePort, position, symmetricKey = "SoonToBeGenerated") {
     if(data.parent) {
-      let index = data.neighbors.map(n => n.address).indexOf(data.parent.address);
+      let index = data.neighbors.findIndex(n => n.address === data.parent.address && n.receivePort === data.parent.receivePort);
       if(index >= 0)
         data.neighbors.splice(index, 1);
     }
@@ -93,7 +96,8 @@ module.exports = function(){
       address: address,
       sendPort: sendPort,
       receivePort: receivePort,
-      position: position
+      position: position,
+      symmetricKey: symmetricKey
     };
 
     data.neighbors.push(data.parent);
@@ -183,14 +187,28 @@ module.exports = function(){
   this.getChannel = function() {
     return data.channel;
   }
-  /************************ ENCRYPTION ************************/
-	this.getKeys = function(){
-		return data.keys;
-	};
 
-	this.setKeys = function(keys){
-		data.keys = keys;
-	};
+  /************************ ENCRYPTION ************************/
+  this.setChannelAsymmetricKeys = function(privateKey, publicKey) {
+    data.asymmetricKeys = {
+      publicKey: ursa.createPublicKey(publicKey),
+      privateKey: ursa.createPrivateKey(privateKey)
+    };
+  };
+
+  this.addSymmetricKey = function(key) {
+    if(data.symmetricKeys.indexOf(key) === -1) {
+      data.symmetricKeys.push(key);
+    }
+  };
+
+  this.removeSymmetricKey = function(key) {
+    let index = data.symmetricKeys.indexOf(key);
+
+    if(index >= 0) {
+      data.symmetricKeys.splice(index, 1);
+    }
+  };
 };
 
 /************************* HELPERS **************************/
