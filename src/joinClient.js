@@ -34,6 +34,7 @@ exports.addChild = function(srcIp, srcPort, position, sendPort, receivePort, key
 
 	return axios.post('http://' + srcIp + ':' + srcPort + '/parentingRequest', params)
 	.then(response => {
+		console.log(response.data);
 	  	return response.data;
 	  })
 	.catch(error => {

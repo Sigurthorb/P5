@@ -28,12 +28,12 @@ module.exports = function Router(db, emitter) {
   client.bind(db.getSendPort());
 
   let send = function(host, port, message) {
-    log("debug", "Attempting to send message to %s:%d", host, port);
+    console.log("debug", "Attempting to send message to %s:%d", host, port);
     client.send(message, 0, message.length, port, host, function(err) {
       if(err) {
-        log("error", "Failed to send message to %s:%d, error:%s", host, port, err.message);
+        console.log("error", "Failed to send message to %s:%d, error:%s", host, port, err.message);
       } else {
-        log("debug", "Successfully send message to  %s:%d", host, port);
+        console.log("debug", "Successfully send message to  %s:%d", host, port);
       }
     });
   };
@@ -49,12 +49,12 @@ module.exports = function Router(db, emitter) {
 
   let addChild = function(address, port, address, childPosition) {
     let symmetricKey = "SoonToBeGenerated";
-    log("info", "Sending a join invitiation to candidate child with position channel %s", childPosition);
+    console.log("info", "Sending a join invitiation to candidate child with position channel %s", childPosition);
     joinClient.addChild(address, port, childPosition, db.getSendPort(), db.getReceivePort(), symmetricKey).then((obj) => {
-      log("debug", "Successfully sent ParentRequest to candidate channel %s");
-      db.addChild(obj.address, obj.sendPort, obj.receivePort, childPosition, symmetricKey);
+      console.log("debug", "Successfully sent ParentRequest to candidate channel %s");
+      db.addChild(address, obj.sendPort, obj.receivePort, childPosition, symmetricKey);
     }).catch((err) => {
-      log("error", "Failed to add child with error: %s", err.message, err);
+      console.log("error", "Failed to add child with error: %s", err.message, err);
     });
   };
 
@@ -97,8 +97,18 @@ module.exports = function Router(db, emitter) {
     // Propagate up if this node is fully reserved
     let position = db.getPosition();
     console.log(packetObj);
-    if(packetObj.channel === position || (routingData.fromParent && db.getChannel() === packetObj.channel)) {
-      let childCount = db.getChildrenCount();
+    let childCount = db.getChildrenCount();
+    //If this node doesn't have any neighbors, he is Root and lonely ("I am Groooooot");
+    if(db.getNeighbors().length === 0) {
+        let newNeighbor = JSON.parse(packetObj.data.toString());
+        let port = newNeighbor.port;
+        let address = newNeighbor.address;
+
+        util.getRandomNum(0,1).then(newPostFix => {
+          console.log("Add Child...");
+          addChild(address, port, address, position + newPostFix);
+        });
+    } else if(packetObj.channel === position || (routingData.fromParent && db.getChannel() === packetObj.channel)) {
       if(childCount == 2) {
         // children saturated, random pick child to forward to
         util.getRandomNum(0,1).then(pick => {
@@ -122,6 +132,7 @@ module.exports = function Router(db, emitter) {
           addChild(address, port, address, position + newPostFix);
         } else {
           util.getRandomNum(0,1).then(newPostFix => {
+            console.log("Add Child...");
             addChild(address, port, address, position + newPostFix);
           });
         }
@@ -133,8 +144,8 @@ module.exports = function Router(db, emitter) {
       let candidates = db.getChildren();
       let candidate = undefined;
       for(let i = 0; i < candidates.length; i++) {
-        if(candidates[i]) {
-          candidate = packetObj.channel.startsWith(candidates[i].position);
+        if(candidates[i] && packetObj.channel.startsWith(candidates[i].position)) {
+          candidate = candidates[i];
           break;
         }
       }
@@ -146,6 +157,7 @@ module.exports = function Router(db, emitter) {
         console.log("\tpacketData: ", JSON.stringify(packetObj, null, 2));
         console.log("\tcandidateNodes: ", JSON.stringify(candidates, null, 2));
       } else {
+        console.log(candidate);
         // OUTGOING PACKET
         sendPacketObject(packetObj, candidate);
       }

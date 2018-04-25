@@ -5,16 +5,16 @@ const util = require('util');
 
 //This is the contructor
 function JoinServer(opts) {
+	let listener;
 	let self = this;
-	let listener = express();
-	this.close = listener.close;
+	let server = express();
   	EventEmitter.call(this);
 
-	listener.use(bodyParser.json()); // support json encoded bodies
-	listener.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
+	server.use(bodyParser.json()); // support json encoded bodies
+	server.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 
 	//Sent from Candidate Node to Entry Point Node
-	listener.get('/getTopologyServers', function(req, res){
+	server.get('/getTopologyServers', function(req, res){
 		if(opts.topologyServers && opts.networkId){
 			let data = {
 				servers:opts.topologyServers,
@@ -28,7 +28,7 @@ function JoinServer(opts) {
 	});
 
 	//Sent from Candidate Node to Entry Point Node
-	listener.post('/requestToJoin', function(req, res){
+	server.post('/requestToJoin', function(req, res){
 		let data = {
 			channel: req.body.channel,
 			address: req.connection.remoteAddress,
@@ -42,19 +42,30 @@ function JoinServer(opts) {
 	});
 
 	//Sent from Parent Node to Candidate Node
-	listener.post('/parentingRequest', function(req, res){
+	server.post('/parentingRequest', function(req, res){
 		//This is an encoded msg that contains - position, send and receive ports from the parent
 		let params = req.body;
 		params.address = req.connection.remoteAddress;
 
 		//Emit server creation request
 		self.emit('parentRequest', params);
+		
+		let data = {
+			sendPort:opts.sendPort,
+			receivePort:opts.receivePort
+		};
 
 		//Send send/receive ports
+		res.json(data);
 	});
 
-	listener.listen(opts.port, '0.0.0.0');
-	console.log('Listening at http://localhost:' + opts.port);
+	listener = server.listen(opts.joinPort, '0.0.0.0');
+	console.log('Listening at http://localhost:' + opts.joinPort);
+
+	this.close = function(){
+		console.log("Closing connection...");
+		if(listener) listener.close();
+	};
 
 };
 

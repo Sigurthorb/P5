@@ -70,7 +70,7 @@ function P5Server(opts) {
 	let jServer = new joinServer({
 		topologyServers: opts.topologyServers,
 		networkId: opts.networkId,
-		port: opts.joinPort
+		joinPort: opts.joinPort
 	});
 
 	jServer.on("joinRequest", data => {

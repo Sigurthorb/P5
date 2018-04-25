@@ -43,7 +43,9 @@ exports.create = function(topologyServers, opts = {}){
 //Returns: A newly generated public key for the root node
 exports.join = function(srcNodeIp, srcNodePort, minNodes, maxNodes, opts){
 	let keys, netId, topologyServers, channel;
-	let jServer = new JoinServer({ port:opts.joinPort || 33666 });
+	let jServer = new JoinServer({ 	sendPort:opts.sendPort || 33444,
+									receivePort:opts.receivePort || 33555,
+									joinPort:opts.joinPort || 33666 });
 
 	console.log("Generating Keys...");
 	//First, generate public/private keys
@@ -83,6 +85,9 @@ exports.join = function(srcNodeIp, srcNodePort, minNodes, maxNodes, opts){
 				let position = parent.position;
 				parent.position = parent.position.slice(0, parent.position.length-1);
 
+				//Stop temp jServer listener
+				jServer.close();
+
 				console.log("Instantiating Server...");
 				let server = new P5Server({
 					networkId:netId, 
@@ -95,13 +100,11 @@ exports.join = function(srcNodeIp, srcNodePort, minNodes, maxNodes, opts){
 					joinPort:opts.joinPort || 33666,
 					parent:parent
 				});
-				console.log("Server Instantiated. Position: ", positon);
+				console.log("Server Instantiated. Position: ", position);
 
 				//Add topology information
-				topology.joinNetwork(topologyServers, netId, positon);
+				topology.joinNetwork(topologyServers, netId, position);
 
-				//Stop temp jServer listener
-				jServer.close();
 
 				resolve(server);
 			});
