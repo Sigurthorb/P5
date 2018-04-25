@@ -80,15 +80,15 @@ exports.join = function(srcNodeIp, srcNodePort, minNodes, maxNodes, opts){
 			//Now listen for a parent request...
 			jServer.on("parentRequest", parent => {
 				console.log("Got Parent Request.");
-				let positon = parent.positon;
-				parent.positon = parent.position.slice(0, parent.position.length-1);
+				let position = parent.position;
+				parent.position = parent.position.slice(0, parent.position.length-1);
 
 				console.log("Instantiating Server...");
 				let server = new P5Server({
 					networkId:netId, 
 					keys:keys,
 					channel:channel,
-					positon:positon,
+					position:position,
 					topologyServers:topologyServers,
 					sendPort:opts.sendPort || 33444,
 					receivePort:opts.receivePort || 33555,
