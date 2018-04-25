@@ -1,110 +1,87 @@
-let externalIp = require('public-ip');
-let internalIp = require('internal-ip');
-let EventEmitter = require('events');
-let DataBase = require('./db');
-let Router = require('./communication/router');
-var http = require('http');
-var dgram = require('dgram');
-
+const externalIp = require('public-ip');
+const internalIp = require('internal-ip');
+const EventEmitter = require('events');
+const joinServer = require("./joinServer");
+const DataBase = require('./db');
+const Router = require('./communication/router');
+const util = require('util');
+const http = require('http');
+const dgram = require('dgram');
 
 
 //This is the contructor
-var P5Server = function(opts) {
-  this.db = new DataBase();
-  let envt = new EventEmitter();
-  this.prototype = envt;
-  let router = new Router(this.db, envt);
+function P5Server(opts) {
+  let self = this;
+	let db = new DataBase();
+  let routerEmitter = new EventEmitter();
+  let router = new Router(db, routerEmitter);
+  EventEmitter.call(this);
 
-  this.prototype.sendStringMsg = function(obj) {
+  db.setSendPort(opts.sendPort);
+  db.setReceivePort(opts.receivePort);
+  db.setJoinPort(opts.joinPort);
+
+	//Store this on the db
+	db.setTopologyServers(opts.topologyServers);
+	db.setNetworkId(opts.networkId);
+	db.setKeys(opts.keys);
+  db.setPosition(opts.position);
+  console.log("Position: ", opts.position);
+
+  //Add parent if necessary
+  if(opts.parent) db.setParent(opts.parent.address, opts.parent.sendPort, opts.parent.receivePort, opts.parent.position);
+
+  //Make this accessible to the user
+  this.key = opts.keys.publicKey;
+  this.channel = opts.channel;
+
+	this.start = function() {
+		router.startListen();
+	}
+
+	this.stop = function() {
+		router.stopListen();
+	}
+
+	this.sendSynMsg = function(buffer) {
+  	// validation
+  	try {
+    		router.sendSynMsg(buffer); // TAKES A BUFFER
+  	} catch(err) {
+
+  	}
+	};
+
+  this.sendDataMsg = function(buffer) {
     // validation
     try {
-      router.sendMsg(); // TAKES A BUFFER
+        router.sendSynMsg(buffer); // TAKES A BUFFER
     } catch(err) {
 
     }
-  
-    
   };
 
-  //router.sendMsg()
+  //Forward event to the user
+  routerEmitter.on("message", data => {
+    self.emit("message", data);
+  });
 
-  if(opts.root) {
-    this.waitingConnection = false;
-  } else {
-    this.waitingConnection = true;
-  }
-
-  this.db.setSendPort(opts.sendPort);
-  this.db.setReceivePort(opts.receivePort);
-
-	//Make this accessible to the user
-	this.key = opts.keys.publicKey;
-
-	//Store this on the db
-	this.db.setTopologyServers(opts.topologyServers);
-	this.db.setNetworkId(opts.networkId);
-	this.db.setKeys(opts.keys);
-};
-
-
-P5Server.prototype = new EventEmitter();
-
-P5Server.prototype.start = function() {
-	self = this;
-	//Get the public and local ip's before starting the listener
-	externalIp.v4().then(publicIp => {
-	    internalIp.v4().then(localIp => {
-        let listener = dgram.createSocket('udp4');
-	      console.log("Your public IP address is '" + publicIp + "'");
-	      console.log("Your local IP address is '" + localIp + "'");
-	      console.log("Make sure to route UDP port '" + this.db.getReceivePort() + "' to your local IP address");
-        console.log("\n\n");
-        
-        //self.db.setAddress(publicIp);
-        self.db.setAddress(localIp);
-	  
-	      listener.on("listening", function() {
-	        let address = listener.address();
-	        console.log('\tUDP Server listening on ' + address.address + ":" + address.port + "\n\n");
-	      });
-	  
-	  	  //Incoming message from another node 
-	      listener.on("message", function(message, remote) {
-          if(waitingConnection) {
-            let invite = JSON.parse(message.toString());
-            console.log("GOT INVITE");
-            console.log(invite);
-            let parent = invite.parentInfo;
-            self.db.setParent(parent.address, parent.sendPort, parent.receivePort, parent.channel);
-            self.db.setCommChannel(invite.commChannel);
-            return;
-          }
-          //Send it to router (router will forward if necessary)
-	        router.parseMsg(message, remote).then(msg => {
-	        	//Emit newMsg event for the user
-	        	if(msg) self.emit('newMsg', data);
-	        });
-	      });
-	  
-	      listener.on("error", function(err) {
-	        console.error("Socket server error: ", err.message, "\nerr:", err);
-	      });
-
-	      //Start Listener
-	      listener.bind(self.db.getReceivePort(), localIp);
-	    });
+	//Start joinServer -- Will listen for candidate nodes
+	let jServer = new joinServer({
+		topologyServers: opts.topologyServers,
+		networkId: opts.networkId,
+		port: opts.joinPort
 	});
 
-	//User Send function
-	this.send = function(message, receiverKey, receiverCh) {
-		router.sendMsg(message, receiverKey, receiverCh);
-	};
+	jServer.on("joinRequest", data => {
+    console.log(data);
+		router.sendJoinMsg(data.address, data.port, data.channel);	
+	});
 
-	//Stop this server
-	this.stop = function() {
-	  listener.close();
-  }
-}
+};
 
-// Export the server
+//Make P5 an emitter
+util.inherits(P5Server, EventEmitter);
+
+// Export the server class
 module.exports = P5Server;

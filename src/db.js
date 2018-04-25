@@ -60,6 +60,14 @@ module.exports = function(){
     return data.receivePort;
   }
 
+  this.setJoinPort = function(port) {
+    data.joinPort = port;
+  }
+
+  this.getJoinPort = function(port) {
+    return data.joinPort;
+  }
+
   this.setAddress = function(ip) {
     data.address = ip;
   }

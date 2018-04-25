@@ -96,6 +96,8 @@ module.exports = function Router(db, emitter) {
     // Make it so that the spot is reserved until someone joins the network
     // Propagate up if this node is fully reserved
     let position = db.getPosition();
+    console.log(position);
+    console.log(packetObj.channel.startsWith(position));
     console.log(packetObj);
     if(packetObj.channel === position || (routingData.fromParent && db.getChannel() === packetObj.channel)) {
       let childCount = db.getChildrenCount();
@@ -158,7 +160,7 @@ module.exports = function Router(db, emitter) {
       //  * not destined for this nodes subscribed channel
       // Only thing left is to route up
 
-      // OUTGOING PACKET
+      // OUTGOING PACKET -- BUG: What if there is no parent? If this is the root node?
       sendPacketObject(packetObj, db.getParent());
     } else {
         console.log("ERROR: PROCESSING JOIN PACKET, MISSING CASE");
