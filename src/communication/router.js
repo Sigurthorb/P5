@@ -225,7 +225,7 @@ module.exports = function Router(db, emitter) {
     processJoinPacket(packetObj, {fromParent: false});
   }
 
-  let leaveNetwork = function() {
+  this.leaveNetwork = function() {
     // Leave msg sent from a child to parent to remove them from neighbors.
     // Leave msg sent from parent to children to notify them to leave
     let packetObj = {
@@ -258,10 +258,6 @@ module.exports = function Router(db, emitter) {
 
   let parseMsg = this.parseMsg;
   let serverListening = false;
-
-  this.destroy = function() {
-    // stop listener
-  }
 
   this.startListen = function() {
     if(!serverListening) {
