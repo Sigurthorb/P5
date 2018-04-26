@@ -3,10 +3,12 @@ let Parser = require("binary-parser-encoder").Parser;
 
 var MessageParser = new Parser()
   .endianess("big")
-  .uint32("checksum")
+  .int32("checksum")
   .buffer("packet", {
     "readUntil": "eof"
-  })
+  });
+  
+var NetworkPacketParser = new Parser()
 
 var PacketParser = new Parser()
   .endianess("big")
@@ -46,7 +48,7 @@ var PacketParser = new Parser()
     }
   })
   .bit6("bitmask")
-  .uint32("checksum")
+  .int32("checksum")
   .buffer("data", {
     "readUntil": "eof"
   });

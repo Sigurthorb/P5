@@ -144,9 +144,9 @@ module.exports = function(){
     data.children.push(newNeighbor);
   };
   
-	this.removeChild = function(address, sendPort) {
-    let childIndex = data.children.findIndex(c => c.address === address && c.sendPort === sendPort);
-    let neighborIndex = data.neighbors.findIndex(n => n.address === address && n.sendPort === sendPort);
+	this.removeChild = function(child) {
+    let childIndex = data.children.findIndex(c => c.address === child.address && c.sendPort === child.sendPort);
+    let neighborIndex = data.neighbors.findIndex(n => n.address === child.address && n.sendPort === child.sendPort);
     
     if(childIndex >= 0 && neighborIndex >= 0) {
       // Returns removed child
@@ -201,10 +201,10 @@ module.exports = function(){
   }
 
   /************************ ENCRYPTION ************************/
-  this.setChannelAsymmetricKeys = function(privateKey, publicKey) {
+  this.setChannelAsymmetricKeys = function(keys) {
     data.asymmetricKeys = {
-      publicKey: ursa.createPublicKey(publicKey),
-      privateKey: ursa.createPrivateKey(privateKey)
+      publicKey: ursa.createPublicKey(keys.publicKey),
+      privateKey: ursa.createPrivateKey(keys.privateKey)
     };
   };
 

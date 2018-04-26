@@ -7,7 +7,7 @@ let userTransports = [];
 if(config.logger.logToConsole) {
   userTransports.push(new transports.Console({
     level: config.logger.consoleLevel
-  }))
+  }));
 }
 
 if(config.logger.logToFile) {

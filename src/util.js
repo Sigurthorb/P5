@@ -7,11 +7,14 @@ let getRandomNum = function(low, high) {
 }
 
 let getChecksum = function(buffer) {
-  return ADLER32.buff(buffer);
+  let checksum = ADLER32.buf(buffer);
+  return checksum;
 }
 
 let verifyChecksum = function(buffer, checksum) {
   return getChecksum(buffer) === checksum;
+}
+
 //Decide on a channel based on topology, size and public key
 let pickChannel = function(topology, k, min, max) {
 	let key = String(k);
@@ -44,10 +47,7 @@ let pickChannel = function(topology, k, min, max) {
 
 module.exports = {
   getRandomNum: getRandomNum,
-<<<<<<< HEAD
   getChecksum: getChecksum,
-  verifyChecksum: verifyChecksum
-=======
+  verifyChecksum: verifyChecksum,
   pickChannel: pickChannel
->>>>>>> bfb86469636fc6bb3cd565caf01c0613c3301b1a
-};
+}

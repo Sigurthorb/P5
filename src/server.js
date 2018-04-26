@@ -21,7 +21,7 @@ function P5Server(opts) {
 	//Store this on the db
 	db.setTopologyServers(opts.topologyServers);
 	db.setNetworkId(opts.networkId);
-	db.setKeys(opts.keys);
+	db.setChannelAsymmetricKeys(opts.keys);
   db.setPosition(opts.position);
 	console.log("Position: ", opts.position);
 	
@@ -45,31 +45,56 @@ function P5Server(opts) {
 	}
 
 	this.stop = function() {
+    router.leaveNetwork();
 		router.stopListen();
 	}
 
-	this.sendSynMsg = function(buffer) {
-  	// validation
-  	try {
-    		router.sendSynMsg(buffer); // TAKES A BUFFER
-  	} catch(err) {
+  // this be promise for error reporting?
+	this.sendSynMsg = function(publicKey, opts) {
+    // opts values are optional client side, needs to be defined before entering router.
+    // {channel: string, symmetricKey: string, data: Buffer}
+    // symmetricKey validation length and type
+    // data buffer max length to be defined
 
-  	}
+    let channel = opts.channel;
+    let symmetricKey = opts.symmetricKey
+    let data = opts.data;
+
+    // validation
+    db.addSymmetricKey(symmetricKey);
+    router.sendSynMsg(publicKey, channel, symmetricKey, data);
+
 	};
 
-  this.sendDataMsg = function(buffer) {
-    // validation
-    try {
-        router.sendSynMsg(buffer); // TAKES A BUFFER
-    } catch(err) {
-
-    }
+  // this be promise for error reporting?
+  this.sendDataMsg = function(symmetricKey, dataBuffer, channel = "") {
+    //validation
+    router.sendDataMsg(channel, symmetricKey, dataBuffer);
   };
 
   //Forward event to the user
-  routerEmitter.on("message", data => {
-    self.emit("message", data);
+  routerEmitter.on("synMessage", data => {
+    /*
+    data: {
+      symmetricKey: string,
+      channel: string,
+      data: buffer
+    }
+    */
+    self.emit("synMessage", data);
   });
+
+  routerEmitter.on("dataMessage", data => {
+    /*
+    data: {
+      symmetricKey: string,
+      data: buffer
+    }
+    */
+    self.emit("synMessage", data);
+  });
+
+  // router error/status events to be defined.
 
 	//Start joinServer -- Will listen for candidate nodes
 	let jServer = new joinServer({

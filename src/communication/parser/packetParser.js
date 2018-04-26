@@ -1,4 +1,4 @@
-let { PacketParser, MessageParser } = require("./packetParser");
+let { PacketParser, MessageParser } = require("./parsers");
 
 let createPacketBuffer = function(data) {
   data.bitmast = data.channel.length;
@@ -13,12 +13,14 @@ let parsePacketBuffer = function(buff) {
 }
 
 // Takes in encrypted data and the checksum of the decrypted data
-let createMessageBuffer = function(data, checksum) {
+let createMessageBuffer = function(packetBuffer, checksum) {
   let obj = {
-    data: data,
+    packet: packetBuffer,
     checksum: checksum
   };
-  let dataBuffer = MessageParser.encode(obj);
+  console.log(obj);
+  let buffer = MessageParser.encode(obj);
+  return buffer;
 }
 
 let parseMessageBuffer = function(buff) {
@@ -27,6 +29,8 @@ let parseMessageBuffer = function(buff) {
 }
 
 module.exports = {
-  parsePacket: parsePacket,
-  createPacket: createPacket
+  createPacketBuffer,
+  parsePacketBuffer,
+  createMessageBuffer,
+  parseMessageBuffer
 };

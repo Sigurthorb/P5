@@ -14,8 +14,8 @@ module.exports = function(db) {
 
   }
 
-  this.encryptSymmetric = function(data, key) {
-
+  this.encryptSymmetric = function(buffer, key) {
+    return buffer
   }
 
   this.encryptSynPacket = function(packet, key) {
