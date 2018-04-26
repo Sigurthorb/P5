@@ -2,7 +2,9 @@ var P5 = require('../index');
 
 let isRoot = process.env.ROOT_NODE === "TRUE";
 let waitTime = parseInt(process.env.WAIT_CONN);
+// todo, security params
 
+// todo, https://docs.docker.com/compose/startup-order/
 
 var opts = {
   sendPort:parseInt(process.env.SEND_PORT),
