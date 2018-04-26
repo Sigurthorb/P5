@@ -76,7 +76,7 @@ module.exports = function(){
     return data.address;
   }
 
-  this.setStartupAsRoot = function() {
+  this.setAsRoot = function() {
     data.isRootNode = true;
   }
 
@@ -113,6 +113,10 @@ module.exports = function(){
 
   this.getChildren = function() {
     return data.children;
+  }
+
+  this.getFirstChild = function() {
+    return data.children[0];
   }
 
   this.getChildrenCount = function() {

@@ -1,7 +1,7 @@
 version: '2'
 services:
   p5-root:
-    build: .
+    image: p5
     ports:
      - "3000:3000"
      - "3001:3001"
@@ -12,7 +12,7 @@ services:
      - SEND_PORT=4000
      - WAIT_CONN=0
   p5-join1:
-    build: .
+    image: p5
     ports:
       - "3002:3002"
       - "3003:3003"
@@ -21,9 +21,9 @@ services:
      - RECEIVE_PORT=3002
      - SEND_PORT=4001
      - JOIN_PORT=3003
-     - WAIT_CONN=2
+     - WAIT_CONN=4
   p5-join2:
-    build: .
+    image: p5
     ports:
       - "3004:3004"
       - "3005:3005"
@@ -32,9 +32,9 @@ services:
      - RECEIVE_PORT=3004
      - SEND_PORT=4002
      - JOIN_PORT=3005
-     - WAIT_CONN=4
+     - WAIT_CONN=8
   p5-join3:
-    build: .
+    image: p5
     ports:
       - "3006:3006"
       - "3007:3007"
@@ -43,9 +43,9 @@ services:
      - RECEIVE_PORT=3006
      - SEND_PORT=4003
      - JOIN_PORT=3007
-     - WAIT_CONN=6
+     - WAIT_CONN=12
   p5-join4:
-    build: .
+    image: p5
     ports:
       - "3008:3008"
       - "3009:3009"
@@ -54,9 +54,9 @@ services:
      - RECEIVE_PORT=3008
      - SEND_PORT=4004
      - JOIN_PORT=3009
-     - WAIT_CONN=8
+     - WAIT_CONN=16
   p5-join5:
-    build: .
+    image: p5
     ports:
       - "3010:3010"
       - "3011:3011"
@@ -65,9 +65,9 @@ services:
      - RECEIVE_PORT=3010
      - SEND_PORT=4005
      - JOIN_PORT=3011
-     - WAIT_CONN=10
+     - WAIT_CONN=20
   p5-join6:
-    build: .
+    image: p5
     ports:
       - "3012:3012"
       - "3013:3013"
@@ -76,9 +76,9 @@ services:
      - RECEIVE_PORT=3012
      - SEND_PORT=4006
      - JOIN_PORT=3013
-     - WAIT_CONN=12
+     - WAIT_CONN=24
   p5-join7:
-    build: .
+    image: p5
     ports:
       - "3014:3014"
       - "3015:3015"
@@ -87,9 +87,9 @@ services:
      - RECEIVE_PORT=3014
      - SEND_PORT=4007
      - JOIN_PORT=3015
-     - WAIT_CONN=14
+     - WAIT_CONN=28
   p5-join8:
-    build: .
+    image: p5
     ports:
       - "3016:3016"
       - "3017:3017"
@@ -98,9 +98,9 @@ services:
      - RECEIVE_PORT=3016
      - SEND_PORT=4008
      - JOIN_PORT=3017
-     - WAIT_CONN=16
+     - WAIT_CONN=32
   p5-join9:
-    build: .
+    image: p5
     ports:
       - "3018:3018"
       - "3019:3019"
@@ -109,9 +109,9 @@ services:
      - RECEIVE_PORT=3018
      - SEND_PORT=4009
      - JOIN_PORT=3019
-     - WAIT_CONN=18
+     - WAIT_CONN=36
   p5-join10:
-    build: .
+    image: p5
     ports:
       - "3020:3020"
       - "3021:3021"
@@ -120,9 +120,9 @@ services:
      - RECEIVE_PORT=3020
      - SEND_PORT=4010
      - JOIN_PORT=3021
-     - WAIT_CONN=20
+     - WAIT_CONN=40
   p5-join11:
-    build: .
+    image: p5
     ports:
       - "3022:3022"
       - "3023:3023"
@@ -131,9 +131,9 @@ services:
      - RECEIVE_PORT=3022
      - SEND_PORT=4011
      - JOIN_PORT=3023
-     - WAIT_CONN=22
+     - WAIT_CONN=44
   p5-join12:
-    build: .
+    image: p5
     ports:
       - "3024:3024"
       - "3025:3025"
@@ -142,9 +142,9 @@ services:
      - RECEIVE_PORT=3024
      - SEND_PORT=4012
      - JOIN_PORT=3025
-     - WAIT_CONN=24
+     - WAIT_CONN=48
   p5-join13:
-    build: .
+    image: p5
     ports:
       - "3026:3026"
       - "3027:3027"
@@ -153,9 +153,9 @@ services:
      - RECEIVE_PORT=3026
      - SEND_PORT=4013
      - JOIN_PORT=3027
-     - WAIT_CONN=26
+     - WAIT_CONN=52
   p5-join14:
-    build: .
+    image: p5
     ports:
       - "3028:3028"
       - "3029:3029"
@@ -164,9 +164,9 @@ services:
      - RECEIVE_PORT=3028
      - SEND_PORT=4014
      - JOIN_PORT=3029
-     - WAIT_CONN=28
+     - WAIT_CONN=56
   p5-join15:
-    build: .
+    image: p5
     ports:
       - "3030:3030"
       - "3031:3031"
@@ -175,4 +175,4 @@ services:
      - RECEIVE_PORT=3030
      - SEND_PORT=4015
      - JOIN_PORT=3031
-     - WAIT_CONN=30
+     - WAIT_CONN=60

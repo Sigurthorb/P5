@@ -11,6 +11,7 @@ var opts = {
 };
 
 console.log("Starting as " + (process.env.ROOT_NODE == "TRUE" ? "ROOT": "NON_ROOT") + " in " + waitTime + " seconds");
+console.log("With the ops: " + JSON.stringify(opts));
 
 setTimeout(function() {
     if(isRoot) {
@@ -43,9 +44,7 @@ let startRoot = function() {
 
 
 let startClient = function() {
-
-  
-  P5.join("p5-root", "3001", 0, 100, opts).then(p5server => {
+  P5.join("p5-root", 3001, 0, 100, opts).then(p5server => {
     var server = p5server;
   
     console.log("Got your server.");

@@ -100,7 +100,7 @@ exports.join = function(srcNodeIp, srcNodePort, minNodes, maxNodes, opts){
 					joinPort:opts.joinPort || 33666,
 					parent:parent
 				});
-				console.log("Server Instantiated. Position: ", position);
+				console.log("Server Instantiated. Position: '" + position + "'");
 
 				//Add topology information
 				topology.joinNetwork(topologyServers, netId, position);

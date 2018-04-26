@@ -13,9 +13,6 @@ const dgram = require('dgram');
 function P5Server(opts) {
   let self = this;
 	let db = new DataBase();
-  let routerEmitter = new EventEmitter();
-  let router = new Router(db, routerEmitter);
-  EventEmitter.call(this);
 
   db.setSendPort(opts.sendPort);
   db.setReceivePort(opts.receivePort);
@@ -26,10 +23,18 @@ function P5Server(opts) {
 	db.setNetworkId(opts.networkId);
 	db.setKeys(opts.keys);
   db.setPosition(opts.position);
-  console.log("Position: ", opts.position);
+	console.log("Position: ", opts.position);
+	
+	let routerEmitter = new EventEmitter();
+  let router = new Router(db, routerEmitter);
+  EventEmitter.call(this);
 
   //Add parent if necessary
-  if(opts.parent) db.setParent(opts.parent.address, opts.parent.sendPort, opts.parent.receivePort, opts.parent.position);
+  if(opts.parent) {
+		db.setParent(opts.parent.address, opts.parent.sendPort, opts.parent.receivePort, opts.parent.position);
+	} else {
+		db.setAsRoot();
+	}
 
   //Make this accessible to the user
   this.key = opts.keys.publicKey;

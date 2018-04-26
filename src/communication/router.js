@@ -25,6 +25,7 @@ let getCandidatesToSendTo = function(candidates, channel) {
 module.exports = function Router(db, emitter) {
   let client = dgram.createSocket('udp4');
   let listener = dgram.createSocket('udp4');
+  console.log("The DB sendport is " + db.getSendPort());
   client.bind(db.getSendPort());
 
   let send = function(host, port, message) {
@@ -54,7 +55,7 @@ module.exports = function Router(db, emitter) {
       console.log("debug", "Successfully sent ParentRequest to candidate channel %s");
       db.addChild(address, obj.sendPort, obj.receivePort, childPosition, symmetricKey);
     }).catch((err) => {
-      console.log("error", "Failed to add child with error: %s", err.message, err);
+      console.log("error", "Failed to add child with error: %s", err.message);
     });
   };
 
@@ -96,38 +97,27 @@ module.exports = function Router(db, emitter) {
     // Make it so that the spot is reserved until someone joins the network
     // Propagate up if this node is fully reserved
     let position = db.getPosition();
-    console.log(packetObj);
     let childCount = db.getChildrenCount();
-    //If this node doesn't have any neighbors, he is Root and lonely ("I am Groooooot");
-    if(db.getNeighbors().length === 0) {
-        let newNeighbor = JSON.parse(packetObj.data.toString());
-        let port = newNeighbor.port;
-        let address = newNeighbor.address;
-
-        util.getRandomNum(0,1).then(newPostFix => {
-          console.log("Add Child...");
-          addChild(address, port, address, position + newPostFix);
-        });
-    } else if(packetObj.channel === position || (routingData.fromParent && db.getChannel() === packetObj.channel)) {
+    if(db.isRoot() || packetObj.channel === position || (routingData.fromParent && db.getChannel() === packetObj.channel)) {
       if(childCount == 2) {
         // children saturated, random pick child to forward to
         util.getRandomNum(0,1).then(pick => {
           let otherPick = 1 - pick;
-          let children = packetObj.getChildren();
+          let children = db.getChildren();
           // OUTGOING PACKETS
           sendPacketObject(packetObj, children[pick]);
           // TODO FOR LATER
           //packetObj.valid = false;
           //sendPacketObject(packetObj, children[otherPick]);
         });
-      } else if(childCount == 1) {
+      } else {
         // SELECTED AS PARENT
         let newNeighbor = JSON.parse(packetObj.data.toString());
         let port = newNeighbor.port;
         let address = newNeighbor.address;
-
-         if(db.getChildrenCount() == 1) {
-          let child = db.getChildren()[0];
+        // if node is already waiting for a child in the spot, we can send a retry to the client
+         if(childCount == 1) {
+          let child = db.getFirstChild();
           newPostFix = 1 - child.position[child.position.length - 1];
           addChild(address, port, address, position + newPostFix);
         } else {
