@@ -7,7 +7,7 @@ Follow installation guide: https://github.com/JoshKaufman/ursa#building-and-inst
  - OpenSSL version 1_0_2o is required on windows
 
 #### Installations
-Node
+Node version 8 or higher
 npm
 
 #### Setup
