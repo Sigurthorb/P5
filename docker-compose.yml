@@ -8,7 +8,9 @@ services:
     environment:
      - ROOT_NODE=TRUE
      - RECEIVE_PORT=3000
-     - SEND_PORT=3001
+     - JOIN_PORT=3001
+     - SEND_PORT=4000
+     - WAIT_CONN=0
   p5-join1:
     build: .
     ports:
@@ -17,7 +19,8 @@ services:
     environment:
      - ROOT_NODE=FALSE
      - RECEIVE_PORT=3002
-     - SEND_PORT=3003
+     - SEND_PORT=4001
+     - JOIN_PORT=3003
      - WAIT_CONN=2
   p5-join2:
     build: .
@@ -27,7 +30,8 @@ services:
     environment:
      - ROOT_NODE=FALSE
      - RECEIVE_PORT=3004
-     - SEND_PORT=3005
+     - SEND_PORT=4002
+     - JOIN_PORT=3005
      - WAIT_CONN=4
   p5-join3:
     build: .
@@ -37,7 +41,8 @@ services:
     environment:
      - ROOT_NODE=FALSE
      - RECEIVE_PORT=3006
-     - SEND_PORT=3007
+     - SEND_PORT=4003
+     - JOIN_PORT=3007
      - WAIT_CONN=6
   p5-join4:
     build: .
@@ -47,7 +52,8 @@ services:
     environment:
      - ROOT_NODE=FALSE
      - RECEIVE_PORT=3008
-     - SEND_PORT=3009
+     - SEND_PORT=4004
+     - JOIN_PORT=3009
      - WAIT_CONN=8
   p5-join5:
     build: .
@@ -57,7 +63,8 @@ services:
     environment:
      - ROOT_NODE=FALSE
      - RECEIVE_PORT=3010
-     - SEND_PORT=3011
+     - SEND_PORT=4005
+     - JOIN_PORT=3011
      - WAIT_CONN=10
   p5-join6:
     build: .
@@ -67,7 +74,8 @@ services:
     environment:
      - ROOT_NODE=FALSE
      - RECEIVE_PORT=3012
-     - SEND_PORT=3013
+     - SEND_PORT=4006
+     - JOIN_PORT=3013
      - WAIT_CONN=12
   p5-join7:
     build: .
@@ -77,7 +85,8 @@ services:
     environment:
      - ROOT_NODE=FALSE
      - RECEIVE_PORT=3014
-     - SEND_PORT=3015
+     - SEND_PORT=4007
+     - JOIN_PORT=3015
      - WAIT_CONN=14
   p5-join8:
     build: .
@@ -87,7 +96,8 @@ services:
     environment:
      - ROOT_NODE=FALSE
      - RECEIVE_PORT=3016
-     - SEND_PORT=3017
+     - SEND_PORT=4008
+     - JOIN_PORT=3017
      - WAIT_CONN=16
   p5-join9:
     build: .
@@ -97,7 +107,8 @@ services:
     environment:
      - ROOT_NODE=FALSE
      - RECEIVE_PORT=3018
-     - SEND_PORT=3019
+     - SEND_PORT=4009
+     - JOIN_PORT=3019
      - WAIT_CONN=18
   p5-join10:
     build: .
@@ -107,7 +118,8 @@ services:
     environment:
      - ROOT_NODE=FALSE
      - RECEIVE_PORT=3020
-     - SEND_PORT=3021
+     - SEND_PORT=4010
+     - JOIN_PORT=3021
      - WAIT_CONN=20
   p5-join11:
     build: .
@@ -117,7 +129,8 @@ services:
     environment:
      - ROOT_NODE=FALSE
      - RECEIVE_PORT=3022
-     - SEND_PORT=3023
+     - SEND_PORT=4011
+     - JOIN_PORT=3023
      - WAIT_CONN=22
   p5-join12:
     build: .
@@ -127,7 +140,8 @@ services:
     environment:
      - ROOT_NODE=FALSE
      - RECEIVE_PORT=3024
-     - SEND_PORT=3025
+     - SEND_PORT=4012
+     - JOIN_PORT=3025
      - WAIT_CONN=24
   p5-join13:
     build: .
@@ -137,7 +151,8 @@ services:
     environment:
      - ROOT_NODE=FALSE
      - RECEIVE_PORT=3026
-     - SEND_PORT=3027
+     - SEND_PORT=4013
+     - JOIN_PORT=3027
      - WAIT_CONN=26
   p5-join14:
     build: .
@@ -147,7 +162,8 @@ services:
     environment:
      - ROOT_NODE=FALSE
      - RECEIVE_PORT=3028
-     - SEND_PORT=3029
+     - SEND_PORT=4014
+     - JOIN_PORT=3029
      - WAIT_CONN=28
   p5-join15:
     build: .
@@ -157,5 +173,6 @@ services:
     environment:
      - ROOT_NODE=FALSE
      - RECEIVE_PORT=3030
-     - SEND_PORT=3031
+     - SEND_PORT=4015
+     - JOIN_PORT=3031
      - WAIT_CONN=30
