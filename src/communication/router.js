@@ -26,52 +26,7 @@ module.exports = function Router(db, emitter) {
   let client = dgram.createSocket('udp4');
   let listener = dgram.createSocket('udp4');
   client.bind(db.getSendPort());
-
-  let sendPacketToNeighbors = function(packet) {
-    let candidates = getCandidates(db.getNeighbors(), channel);
-    sendPacketsToCandidates(candidates, packet);
-  }
-
-  let sendPacketToCandidates = function(candidates, packet) {
-    let checksum = util.getChecksum(packet);
-    for(var i = 0; i < candidates.length; i++) {
-      sendPacket(packet, checksum, candidates[i]);
-    }
-  }
-
-  let sendPacket = function(packet, packetChecksum, destNeighbor) {
-    let messageObj = {
-      checksum: packetChecksum,
-      packet: encryption.encryptSymmetric(packet, destNeighbor.symmetricKey)
-    };
-
-    let message = packetHandler.createMessageBuffer(message);
-
-    send(destNeighbor.address, destNeighbor.receivePort, message);
-  }
-
-  let send = function(host, port, message) {
-    log("debug", "Attempting to send message to %s:%d", host, port);
-    client.send(message, 0, message.length, port, host, function(err) {
-      if(err) {
-        log("error", "Failed to send message to %s:%d, error:%s", host, port, err.message);
-      } else {
-        log("debug", "Successfully send message to  %s:%d", host, port);
-      }
-    });
-  };
-
-  let addChild = function(address, port, address, childPosition) {
-    let symmetricKey = "SoonToBeGenerated";
-    log("info", "Sending a join invitiation to candidate child with position channel %s", childPosition);
-    joinClient.addChild(address, port, childPosition, db.getSendPort(), db.getReceivePort(), symmetricKey).then((obj) => {
-      log("debug", "Successfully sent ParentRequest to candidate channel %s");
-      db.addChild(obj.address, obj.sendPort, obj.receivePort, childPosition, symmetricKey);
-    }).catch((err) => {
-      log("error", "Failed to add child with error: %s", err.message, err);
-    });
-  };
-
+/*
   let getCandidates = function(lst, channel) {
     let candidates = getCandidatesToSendTo(lst, channel);
 
@@ -90,6 +45,66 @@ module.exports = function Router(db, emitter) {
 
     return candidates;
   };
+*/
+  // sends message to all neighbors without checking for route
+  let sendPacketObjToNeighbors = function(packetObj) {
+    let packet = packetHandler.createPacketBuffer(packetObj);
+    let candidates = db.getNeighbors();
+    if(!candidates.length === 0) {
+      sendPacketToCandidates(candidates, packet);
+    } else {
+      console.log("warn", "No route to send packet to channel %s", packetObj.channel);
+    }
+  }
+
+  // send message to all children without checking for route
+  let sendPacketObjToChildren = function(packetObj) {
+    let packet = packetHandler.createPacketBuffer(packetObj);
+    let candidates = getChildren();
+    sendPacketToCandidates(candidates, packetObj);
+  }
+
+  // send message to list of candidates
+  let sendPacketToCandidates = function(candidates, packet) {
+    let checksum = util.getChecksum(packet);
+    for(var i = 0; i < candidates.length; i++) {
+      sendPacket(packet, checksum, candidates[i]);
+    }
+  }
+
+  // send the actual packet
+  let sendPacket = function(packet, packetChecksum, destNeighbor) {
+    let messageObj = {
+      checksum: packetChecksum,
+      packet: encryption.encryptSymmetric(packet, destNeighbor.symmetricKey)
+    };
+
+    let message = packetHandler.createMessageBuffer(message);
+
+    send(destNeighbor.address, destNeighbor.receivePort, message);
+  }
+
+  let send = function(host, port, message) {
+    console.log("debug", "Attempting to send message to %s:%d", host, port);
+    client.send(message, 0, message.length, port, host, function(err) {
+      if(err) {
+        console.log("error", "Failed to send message to %s:%d, error:%s", host, port, err.message);
+      } else {
+        console.log("debug", "Successfully send message to  %s:%d", host, port);
+      }
+    });
+  };
+
+  let addChild = function(address, port, address, childPosition) {
+    let symmetricKey = "SoonToBeGenerated";
+    console.log("info", "Sending a join invitiation to candidate child with position channel %s", childPosition);
+    joinClient.addChild(address, port, childPosition, db.getSendPort(), db.getReceivePort(), symmetricKey).then((obj) => {
+      console.log("debug", "Successfully sent ParentRequest to candidate channel %s");
+      db.addChild(address, obj.sendPort, obj.receivePort, childPosition, symmetricKey);
+    }).catch((err) => {
+      console.log("error", "Failed to add child with error: %s", err.message);
+    });
+  };
 
   let processSynPacket = function(packetObj, routingData) {
     sendPacketToCandidates(routingData.candidates, packetObj)
@@ -98,36 +113,34 @@ module.exports = function Router(db, emitter) {
   }
 
   let processDataPacket = function(packetObj, routingData) {
-    emmiter.emit("DataMessage", packetObj)
+    emmiter.emit("DataMessage", packetObj);
   }
 
   let processJoinPacket = function(packetObj, routingData) {
     // Make it so that the spot is reserved until someone joins the network
     // Propagate up if this node is fully reserved
     let position = db.getPosition();
-    console.log(packetObj);
-    if(packetObj.channel === position || (routingData.fromParent && db.getChannel() === packetObj.channel)) {
-      let childCount = db.getChildrenCount();
+    let childCount = db.getChildrenCount();
+    if(db.isRoot() || packetObj.channel === position || (routingData.fromParent && db.getChannel() === packetObj.channel)) {
       if(childCount == 2) {
         // children saturated, random pick child to forward to
         util.getRandomNum(0,1).then(pick => {
           let otherPick = 1 - pick;
-          let children = packetObj.getChildren();
-
+          let children = db.getChildren();
           // OUTGOING PACKETS
           let packet = packetHandler.createPacketBuffer(packetObj);
           sendPacket(packet, children[pick]);
           // TODO FOR LATER
           //sendPacket(packetObj, children[otherPick]);
         });
-      } else if(childCount == 1) {
+      } else {
         // SELECTED AS PARENT
         let newNeighbor = JSON.parse(packetObj.data.toString());
         let port = newNeighbor.port;
         let address = newNeighbor.address;
-
-         if(db.getChildrenCount() == 1) {
-          let child = db.getChildren()[0];
+        // if node is already waiting for a child in the spot, we can send a retry to the client
+         if(childCount == 1) {
+          let child = db.getFirstChild();
           newPostFix = 1 - child.position[child.position.length - 1];
           addChild(address, port, address, position + newPostFix);
         } else {
@@ -142,8 +155,10 @@ module.exports = function Router(db, emitter) {
       let candidates = db.getChildren();
       let candidate = undefined;
       for(let i = 0; i < candidates.length; i++) {
-        candidate = packetObj.channel.startsWith(candidates[i].position);
-        break;
+        if(candidates[i] && packetObj.channel.startsWith(candidates[i].position)) {
+          candidate = candidates[i];
+          break;
+        }
       }
 
       // if applicable child does not exist, error, channel not exist
@@ -153,11 +168,11 @@ module.exports = function Router(db, emitter) {
         console.log("\tpacketData: ", JSON.stringify(packetObj, null, 2));
         console.log("\tcandidateNodes: ", JSON.stringify(candidates, null, 2));
       } else {
+        console.log(candidate);
         // OUTGOING PACKET
         let packet = packetHandler.createPacketBuffer(packetObj);
         sendPacket(packet, candidate);
       }
-
     } else if(!routingData.fromParent) {
       // Packet is 
       //  * not from parent node (going up)
@@ -173,14 +188,15 @@ module.exports = function Router(db, emitter) {
         console.log("ERROR: PROCESSING JOIN PACKET, MISSING CASE");
         console.log("\troutingData: ", JSON.stringify(routingData, null, 2));
         console.log("\tpacketData: ", JSON.stringify(packetObj, null, 2));
-        console.log("\n")
+        console.log("\n");
     }
   }
 
   let processLeavePacket = function(packetObj, routingData) {
     if(routingData.fromParent) {
-      console.log("PARENT HAS LEFT THE NETWORK, NEED TO REJOIN");
-      //propagate down the tree
+      let candidates = db.getChildren();
+      sendPacketToCandidates(candidates, packetObj);
+      event.emit("parentLeft", "");
     } else {
       // Received leave from child, remove from neighbors
       let leaver = db.removeNeighbor(routingData.sender.address);
@@ -188,7 +204,7 @@ module.exports = function Router(db, emitter) {
     }
   }
 
-  this.parseMsg = function(message, remote) {
+  let messageHandler = function(message, remote) {
     let routingData = db.getNeighborRoutingData(remote);
     console.log("Received message from ", remote);
     console.log("Routing data is as follows", routingData);
@@ -211,32 +227,24 @@ module.exports = function Router(db, emitter) {
     let packetObj = packetHandler.parsePacketBuffer(messageObj.data);
 
     if(isDestinedForNode(db.getChannel(), packetObj.channel)) {
-      if(packetObj.packetType == "SYN") {
+      if(packetObj.packetType == "SYN") { // This packet might need to be decrypted differently to allow data to be sent
         let synDecrypted, symmetricKey;
         [decryptedData, symmetricKey] = encryption.decryptSymmectric(packetObj.data);
         if(util.verifyChecksum(decryptedData, packetObj.checksum)) {
           log("info", "Successfully received a SYN packet from the network");
-          db.addSymmetricKey(symmetricKey);
-          // Lets not do automatic response to syn messages as the user might want not want to be know to be in the network?
           emmiter.emit("synMessage", {
             channel: JSON.parse(decryptedData.toString()),
             symmetricKey: symmetricKey
           });
         }
       } if(packetObj.packetType == "DATA") {
-        let dataDecrypted, key;
-        [dataDecrypted, key] = encryption.decryptAsymmetric(packetObj.data);
+        let dataDecrypted, symmetricKey;
+        [dataDecrypted, symmetricKey] = encryption.decryptAsymmetric(packetObj.data);
         if(util.verifyChecksum(dataDecrypted, packetObj.checksum)) {
           log("info", "Successfully received a DATA packet from the network")
-          // Thought, keep state of what symmetric keys have been used for decryption and who have not
-          // Send different message for that (e.g. SynAck) because we know that message will be an object
-          // expose a new function, sendSynAck that will take in the symmetric key and a channel and will send a data back
-          // this will activate the symmetric key.
-          // If we keep this state, we can increase the speed of decrypting data packages because we order them in activated order.
-
-          // or, if first time symmetric key has been used, to decrypt data, we can know that it is a ack to a syn
-
           emmiter.emit("dataMessage", {
+            symmetricKey: symmetricKey,
+            data: dataDecrypted
             
           })
         }
@@ -254,7 +262,7 @@ module.exports = function Router(db, emitter) {
     }
   }
 
-  let leaveNetwork = function() {
+  this.leaveNetwork = function() {
     // Leave msg sent from a child to parent to remove them from neighbors.
     // Leave msg sent from parent to children to notify them to leave
 
@@ -278,7 +286,7 @@ module.exports = function Router(db, emitter) {
 
   this.sendSynMsg = function(publicKey, options) {
     let channel, symmetricKey;
-
+    // Perhaps this verification should happen in the server
     if(!options || !options.channel) {
       channel = "";
     }
@@ -311,9 +319,8 @@ module.exports = function Router(db, emitter) {
     };
     
     packetObj.data = encryption.encryptAsymmetric(buffer, publicKey);
-    let packet = packetHandler.createPacketBuffer(packetObj);
 
-    sendPacketToNeighbors(packetObj);
+    sendPacketObjToNeighbors(packetObj);
 
     return symmetricKey;
   }
@@ -326,8 +333,7 @@ module.exports = function Router(db, emitter) {
     };
 
     packetObj.data = encryption.encryptSymmetric(buffer, symmetricKey);
-    let packet = packetHandler.createPacketBuffer(packetObj);
-    sendPacketToNeighbors(packet);
+    sendPacketObjToNeighbors(packet);
   }
 
   this.sendJoinMsg = function(address, port, channel) {
@@ -341,18 +347,14 @@ module.exports = function Router(db, emitter) {
     let packetObj = {
       packetType: "JOIN",
       channel: channel,
-      checksum: util.getChecksum(buffer)
+      checksum: util.getChecksum(buffer),
+      data: buffer
     };
 
     processJoinPacket(packetObj, {fromParent: false});
   }
 
-  let parseMsg = this.parseMsg;
   let serverListening = false;
-
-  this.destroy = function() {
-    // stop listener
-  }
 
   this.startListen = function() {
     if(!serverListening) {
@@ -371,7 +373,7 @@ module.exports = function Router(db, emitter) {
           //Incoming message from another node 
           listener.on("message", function(message, remote) {
             //Send it to router
-            parseMsg(message, remote);
+            messageHandler(message, remote);
           });
       
           listener.on("error", function(err) {

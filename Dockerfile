@@ -1,4 +1,4 @@
-FROM node:6.14.1
+FROM node:8
 
 RUN apt-get update && \
   apt-get -y upgrade && \

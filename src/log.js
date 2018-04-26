@@ -1,5 +1,5 @@
 const { createLogger, format, transports } = require('winston');
-console.log(format);
+
 let config = require("./config.json");
 
 let userTransports = [];

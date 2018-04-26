@@ -63,6 +63,14 @@ module.exports = function(){
     return data.receivePort;
   }
 
+  this.setJoinPort = function(port) {
+    data.joinPort = port;
+  }
+
+  this.getJoinPort = function(port) {
+    return data.joinPort;
+  }
+
   this.setAddress = function(ip) {
     data.address = ip;
   }
@@ -71,7 +79,7 @@ module.exports = function(){
     return data.address;
   }
 
-  this.setStartupAsRoot = function() {
+  this.setAsRoot = function() {
     data.isRootNode = true;
   }
 
@@ -109,6 +117,10 @@ module.exports = function(){
 
   this.getChildren = function() {
     return data.children;
+  }
+
+  this.getFirstChild = function() {
+    return data.children[0];
   }
 
   this.getChildrenCount = function() {
