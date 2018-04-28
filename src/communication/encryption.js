@@ -1,17 +1,22 @@
 let ursa = require("ursa");
+let util = require("../util");
 
 module.exports = function(db) {
 
-  this.encryptDataPacket = function(packet, key) {
+  this.encryptAsymmetric = function(packet, key) {
 
   }
 
-  this.decryptDataPacket = function(packet) {
-
+  this.decryptAsymmetric = function(buffer, checksum) {
+    return buffer, true;
   }
 
-  this.decryptSymmetric = function(data, key) {
-    return data;
+  this.decryptSymmetricWithChecksum = function(buffer, checksum) {
+    return buffer, "symmetricKey";
+  }
+
+  this.decryptSymmetricWithKey = function(buffer, key) {
+    return buffer
   }
 
   this.encryptSymmetric = function(buffer, key) {

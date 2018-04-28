@@ -1,14 +1,12 @@
 const { createLogger, format, transports } = require('winston');
+const config = require("./config.json");
 
-let config = require("./config.json");
-
-let userTransports = [];
-
-if(config.logger.logToConsole) {
-  userTransports.push(new transports.Console({
-    level: config.logger.consoleLevel
-  }));
-}
+let userTransports = [
+  new transports.Console({
+    level: config.logger.consoleLevel,
+    silent: !config.logger.logToConsole
+  })
+];
 
 if(config.logger.logToFile) {
   userTransports.push(new transports.File({
@@ -27,5 +25,5 @@ const logger = createLogger({
 });
 
 module.exports = function() {
-  logger.log.apply(this, arguments);
+  logger.log.apply(logger, arguments);
 }

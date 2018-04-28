@@ -29,6 +29,7 @@ exports.joinNetwork = function(servers, id, ch){
 };
 
 exports.getTopology = function(servers, id){
+  // ISSUE: servers can be undefined, resulting in a crash
 	if(servers.length) {
 		//TO DO Use the first for now, but try different server in the future, if the first one fails
 		return axios.get('http://' + servers[0] + '/network/' + id)

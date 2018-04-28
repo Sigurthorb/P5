@@ -91,7 +91,7 @@ function P5Server(opts) {
       data: buffer
     }
     */
-    self.emit("synMessage", data);
+    self.emit("dataMessage", data);
   });
 
   routerEmitter.on("parentLeft", data => {

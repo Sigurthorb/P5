@@ -1,31 +1,38 @@
-let { PacketParser, MessageParser } = require("./parsers");
+let { PacketParser, MessageParser, SynParser } = require("./parsers");
 
-let createPacketBuffer = function(data) {
-  data.bitmast = data.channel.length;
-  let packet = PacketParser.encode(data);
-  return packet;
+let createPacketBuffer = function(obj) {
+  obj.bitmast = obj.channel.length;
+  let buff = PacketParser.encode(obj);
+  return buff;
 }
 
 let parsePacketBuffer = function(buff) {
-  let data = PacketParser.parse(buff);
-  data.channel = data.channel.slice(0, data.bitmask);
-  return data;
+  let obj = PacketParser.parse(buff);
+  obj.channel = obj.channel.slice(0, obj.bitmask);
+  return obj;
 }
 
 // Takes in encrypted data and the checksum of the decrypted data
-let createMessageBuffer = function(packetBuffer, checksum) {
-  let obj = {
-    packet: packetBuffer,
-    checksum: checksum
-  };
-  console.log(obj);
+let createMessageBuffer = function(obj) {
   let buffer = MessageParser.encode(obj);
   return buffer;
 }
 
 let parseMessageBuffer = function(buff) {
-  let data = MessageParser.parse(buff);
-  return data;
+  let obj = MessageParser.parse(buff);
+  return obj;
+}
+
+let createSynBuffer = function(obj) {
+  obj.bitmast = obj.channel.length;
+  let buff = SynParser.encode(obj);
+  return buff
+}
+
+let parseSynBuffer = function(buff) {
+  let obj = SynParser.parse(buff);
+  obj.channel = obj.channel.slice(0, obj.bitmask);
+  return obj;
 }
 
 module.exports = {

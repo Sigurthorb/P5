@@ -1,13 +1,13 @@
 {
   "crypto": {
-    "SymmetricKeySizeBytes": 256,
+    "SymmetricKeySizeBits": 2048,
     "PrivateKeySizeBits": 2048
   },
   "logger": {
     "logToFile": false,
     "logfile": "test.log",
     "logFileLevel": "debug",
-    "logToConsole": true,
+    "logToConsole": false,
     "consoleLevel": "debug"
   }
 }

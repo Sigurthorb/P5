@@ -57,14 +57,14 @@ let startRoot = function() {
 
     
     if(process.env.LEAVE) {
-      console.log("\n\n\n I WILL LEAVE IN 80 SEK \n\n\n");
+      console.log("\n\n\n I WILL LEAVE IN 70 SEK \n\n\n");
       setTimeout(function() {
         console.log("\n\n\n I WILL LEAVE IN 10 SEK \n\n\n");
         setTimeout(function() {
           server.stop();
           return;
         }, 10000)
-      }, 90000)
+      }, 60000)
     }
   }).catch(err => {
     console.log("Could not create server...");
@@ -82,17 +82,32 @@ let startClient = function() {
     console.log("This is your public key: ", server.key);
     console.log("This is your channel:", server.channel);
   
-    server.on("message", (msg) => {
-      console.log("Message Received\n");
+    server.on("synMessage", (msg) => {
+      console.log("got SYN message");
+      console.log(msg);
+    });
+
+    server.on("dataMessage", (msg) => {
+      console.log("got DATA message");
       console.log(msg);
     });
 
     server.on("parentLeft", () => {
-      console.log("EXITING");
       process.exit();
     });
   
     server.start();
+
+    if(process.env.LEAVE) {
+      console.log("\n\n\n I WILL LEAVE IN 70 SEK \n\n\n");
+      setTimeout(function() {
+        console.log("\n\n\n I WILL LEAVE IN 10 SEK \n\n\n");
+        setTimeout(function() {
+          server.stop();
+          return;
+        }, 10000)
+      }, 60000)
+    }
 
   
   }).catch(err => {

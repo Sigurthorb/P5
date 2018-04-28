@@ -11,7 +11,8 @@ module.exports = function(){
     position: "",
     isRootNode: false,
     symmetricKeys: [],
-    asymmetricKeys: undefined
+    asymmetricKeys: undefined,
+    potentialChildren: 0
 	};
   /************************* TOPOLOGY *************************/
   /*
@@ -181,6 +182,21 @@ module.exports = function(){
     }
 
     return result;
+  }
+  /************************** CHILD ***************************/
+  // Child spots are reserved while waiting on response/error from addChild request
+  this.addPotentialChild = function() {
+    data.potentialChildren++;
+  }
+  
+  this.removePotentialChild = function() {
+    if(data.potentialChildren > 0) {
+      data.potentialChildren--;
+    }
+  };
+
+  this.getPotentialChildren = function() {
+    return data.potentialChildren;
   }
 
   /************************* CHANNEL **************************/

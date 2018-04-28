@@ -1,12 +1,12 @@
 var P5 = require('../index');
 
 var opts = {
-  sendPort:3002,
-  receivePort:3003,
-  joinPort:4001
+  sendPort:3040,
+  receivePort:3041,
+  joinPort:4016
 };
 
-P5.join("127.0.0.1", 4000, 0, 1, opts).then(p5server => {
+P5.join("172.18.0.2", 3001, 2, 4, opts).then(p5server => {
   var server = p5server;
 
   console.log("Got your server.");
@@ -22,8 +22,7 @@ P5.join("127.0.0.1", 4000, 0, 1, opts).then(p5server => {
 
   setTimeout(function() {
     server.stop();
-
-  }, 5000);
+  }, 6000);
 
 }).catch(err => {
   console.log("Could not create server...");

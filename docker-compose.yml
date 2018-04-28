@@ -8,7 +8,6 @@ services:
     environment:
      - ROOT_NODE=TRUE
      - RECEIVE_PORT=3000
-     - LEAVE=TRUE
      - JOIN_PORT=3001
      - SEND_PORT=4000
      - WAIT_CONN=0
@@ -90,7 +89,6 @@ services:
      - SEND_PORT=4006
      - JOIN_PORT=3013
      - WAIT_CONN=24
-
   p5-join7:
     image: p5
     ports:
@@ -205,6 +203,7 @@ services:
     environment:
      - ROOT_NODE=FALSE
      - RECEIVE_PORT=3030
+     - LEAVE=TRUE
      - SEND_PORT=4015
      - JOIN_PORT=3031
      - WAIT_CONN=60

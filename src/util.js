@@ -1,7 +1,7 @@
 let randomNumber = require("random-number-csprng");
 let ADLER32 = require("adler-32");
 
-// Both values are inclusive
+// Both values are inclusive - promise
 let getRandomNum = function(low, high) {
     return randomNumber(low, high);
 }
