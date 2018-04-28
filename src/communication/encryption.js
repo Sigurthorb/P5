@@ -11,7 +11,7 @@ module.exports = function(db) {
   }
 
   this.decryptSymmetric = function(data, key) {
-
+    return data;
   }
 
   this.encryptSymmetric = function(buffer, key) {

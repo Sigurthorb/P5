@@ -94,6 +94,11 @@ function P5Server(opts) {
     self.emit("synMessage", data);
   });
 
+  routerEmitter.on("parentLeft", data => {
+    router.stopListen();
+    self.emit("parentLeft", "");
+  })
+
   // router error/status events to be defined.
 
 	//Start joinServer -- Will listen for candidate nodes
