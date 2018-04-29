@@ -35,12 +35,17 @@ function P5Server(opts) {
   this.key = opts.keys.publicKey;
   this.channel = opts.channel;
 
+  //this.addSymmetricKey = db.addSymmetricKey;
+  //this.removeSymmetricKey = db.removeSymmetricKey;
+
 	this.start = function() {
 		router.startListen();
 	}
 
 	this.stop = function() {
+    //router.sendLeaveMsg();
 		router.stopListen();
+    //topology.leave();
 	}
 
 	this.sendSynMsg = function(buffer) {
@@ -62,9 +67,17 @@ function P5Server(opts) {
   };
 
   //Forward event to the user
-  routerEmitter.on("message", data => {
+  routerEmitter.on("synMsg", data => {
     self.emit("message", data);
   });
+
+  routerEmitter.on("dataMsg", data => {
+    self.emit("message", data);
+  });
+
+  // routerEmitter.on("parentLeft", data => {
+  //   this.stop();
+  // });
 
 	//Start joinServer -- Will listen for candidate nodes
 	let jServer = new joinServer({
