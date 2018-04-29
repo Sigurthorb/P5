@@ -7,7 +7,7 @@
     "logToFile": false,
     "logfile": "test.log",
     "logFileLevel": "debug",
-    "logToConsole": false,
+    "logToConsole": true,
     "consoleLevel": "debug"
   }
 }

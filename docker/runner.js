@@ -105,8 +105,8 @@ let startClient = function() {
         setTimeout(function() {
           server.stop();
           return;
-        }, 10000)
-      }, 60000)
+        }, 60000)
+      }, 10000)
     }
 
   
