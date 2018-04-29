@@ -8,7 +8,6 @@ const EnDeCrypt = require("./encryption");
 const validator = require("../validator");
 const util = require("../util");
 const joinClient = require("../joinClient");
-const timer = require("simple-timer");
 
 
 let isDestinedForNode = function(nodePosition, destinationChannel) {
@@ -310,7 +309,6 @@ module.exports = function Router(db, event) {
       checksum: util.getChecksum(buffer),
       data: buffer
     };
-
     processLeavePacket(packetObj, {fromParent: true, candidates: db.getNeighbors(), thisNodeLeft: true});
   }
 

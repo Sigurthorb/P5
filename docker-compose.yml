@@ -203,7 +203,6 @@ services:
     environment:
      - ROOT_NODE=FALSE
      - RECEIVE_PORT=3030
-     - LEAVE=TRUE
      - SEND_PORT=4015
      - JOIN_PORT=3031
      - WAIT_CONN=60
