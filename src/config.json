@@ -1,6 +1,6 @@
 {
   "crypto": {
-    "SymmetricKeySizeBytes": 32,
+    "SymmetricKeySizeBits": 2048,
     "PrivateKeySizeBits": 2048
   },
   "logger": {

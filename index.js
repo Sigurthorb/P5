@@ -76,11 +76,21 @@ exports.join = function(srcNodeIp, srcNodePort, minNodes, maxNodes, opts){
 		//Request to join
 		return JoinClient.joinNetwork(srcNodeIp, srcNodePort, channel, opts.joinPort);
 	}).then(resp => {
-		console.log("Listening for Parent Request...");
+    console.log("Listening for Parent Request...");
+	// TODO: Implement timeout!
+	// TODO: change to 2 tab size
 		//New promise returns a P5Server
 		return new Promise(function(resolve, reject) {  
 			//Now listen for a parent request...
+			let connected = false;
+			setTimeout(function() {
+				if(!connected) {
+					console.log("ERROR: Did not receive a invite after 10sek");
+					process.exit();
+				}
+			}, 10000);
 			jServer.on("parentRequest", parent => {
+				connected = true;
 				console.log("Got Parent Request.");
 				let position = parent.position;
 				parent.position = parent.position.slice(0, parent.position.length-1);
@@ -100,7 +110,7 @@ exports.join = function(srcNodeIp, srcNodePort, minNodes, maxNodes, opts){
 					joinPort:opts.joinPort || 33666,
 					parent:parent
 				});
-				console.log("Server Instantiated. Position: ", position);
+				console.log("Server Instantiated. Position: '" + position + "'");
 
 				//Add topology information
 				topology.joinNetwork(topologyServers, netId, position);

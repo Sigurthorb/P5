@@ -1,33 +1,29 @@
-
 let ursa = require("ursa");
-// Thoughts: Could make neighbors share a symmetric key for join and leave messages.
+let util = require("../util");
 
-module.exports = function() {
-  let storage = {
-    symmetric: {},
-    asymmetric: {}
-  };
+module.exports = function(db) {
 
-  let addSymKey = function(key, name) {
-    storage.symmetric[name] = key;
-  }
-
-  let addAsymKey = function(privateKey, publicKey, name) {
-    storage.asymmetric[name] = {
-      pub: ursa.createPublicKey(publicKey),
-      priv: ursa.createPrivateKey(privateKey)
-    };
-  };
-
-  let encryptDataPacket = function(packet, name) {
+  this.encryptAsymmetric = function(packet, key) {
 
   }
 
-  let decryptDataPacket = function(packet) {
-
+  this.decryptAsymmetric = function(buffer, checksum) {
+    return buffer, true;
   }
 
-  let encryptSynPacket = function(packet, name) {
+  this.decryptSymmetricWithChecksum = function(buffer, checksum) {
+    return buffer, "symmetricKey";
+  }
+
+  this.decryptSymmetricWithKey = function(buffer, key) {
+    return buffer
+  }
+
+  this.encryptSymmetric = function(buffer, key) {
+    return buffer
+  }
+
+  this.encryptSynPacket = function(packet, key) {
     let keys = storage.asymmetric[name];
     if(!keys) {
       console.log("ERROR: No asymmetric key with name '" + name + "'");
@@ -38,7 +34,7 @@ module.exports = function() {
     return packet;
   }
 
-  let decryptSynPacket = function(packet) {
+  this.decryptSynPacket = function(packet) {
     let output = "";
 
     let indexes = Object.keys(storage.asymmetric);
@@ -55,16 +51,5 @@ module.exports = function() {
     //              true if packet is for us
     return [packet, output !== ""];
 
-  }
-  
-  return {
-    addSymKey: addSymKey,
-    addPkiKeys: addPkiKeys,
-    routerFunctions: {
-      encryptDataPacket: encryptDataPacket,
-      decryptDataPacket: decryptDataPacket,
-      encryptSynPacket: encryptSynPacket,
-      decryptSynPacket: decryptSynPacket
-    }
   }
 }

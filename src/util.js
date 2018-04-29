@@ -1,16 +1,18 @@
 let randomNumber = require("random-number-csprng");
+let ADLER32 = require("adler-32");
 
-let encodeChannelToBuff = function(str) {
-
-}
-
-let decodeChannelToInt = function(buff) {
-  
-}
-
-// Both values are inclusive
+// Both values are inclusive - promise
 let getRandomNum = function(low, high) {
     return randomNumber(low, high);
+}
+
+let getChecksum = function(buffer) {
+  let checksum = ADLER32.buf(buffer);
+  return checksum;
+}
+
+let verifyChecksum = function(buffer, checksum) {
+  return getChecksum(buffer) === checksum;
 }
 
 //Decide on a channel based on topology, size and public key
@@ -45,5 +47,7 @@ let pickChannel = function(topology, k, min, max) {
 
 module.exports = {
   getRandomNum: getRandomNum,
+  getChecksum: getChecksum,
+  verifyChecksum: verifyChecksum,
   pickChannel: pickChannel
-};
+}

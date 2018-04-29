@@ -7,6 +7,11 @@ let receivedMessage = function(buff) {
   // return buff.byteLength() === MESSAGE_SIZE_LEN;
 }
 
+let verifySymmetricKey = function(symmetricKey) {
+  return true;
+}
+
 module.exports = {
-  receivedMessage: receivedMessage
+  receivedMessage: receivedMessage,
+  verifySymmetricKey: verifySymmetricKey
 }

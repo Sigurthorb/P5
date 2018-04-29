@@ -1,4 +1,5 @@
 let util = require("./util");
+let ursa = require("ursa");
 
 module.exports = function(){
 	let data = {
@@ -8,7 +9,10 @@ module.exports = function(){
     children: [], // children nodes
     channel: "",
     position: "",
-    isRootNode: false
+    isRootNode: false,
+    symmetricKeys: [],
+    asymmetricKeys: undefined,
+    potentialChildren: 0
 	};
   /************************* TOPOLOGY *************************/
   /*
@@ -76,7 +80,7 @@ module.exports = function(){
     return data.address;
   }
 
-  this.setStartupAsRoot = function() {
+  this.setAsRoot = function() {
     data.isRootNode = true;
   }
 
@@ -91,9 +95,9 @@ module.exports = function(){
   // Parent is parent node
   // Children are children node
   // Neighbors are all nodes
-  this.setParent = function(address, sendPort, receivePort, position) {
+  this.setParent = function(address, sendPort, receivePort, position, symmetricKey = "SoonToBeGenerated") {
     if(data.parent) {
-      let index = data.neighbors.map(n => n.address).indexOf(data.parent.address);
+      let index = data.neighbors.findIndex(n => n.address === data.parent.address && n.receivePort === data.parent.receivePort);
       if(index >= 0)
         data.neighbors.splice(index, 1);
     }
@@ -101,7 +105,8 @@ module.exports = function(){
       address: address,
       sendPort: sendPort,
       receivePort: receivePort,
-      position: position
+      position: position,
+      symmetricKey: symmetricKey
     };
 
     data.neighbors.push(data.parent);
@@ -113,6 +118,10 @@ module.exports = function(){
 
   this.getChildren = function() {
     return data.children;
+  }
+
+  this.getFirstChild = function() {
+    return data.children[0];
   }
 
   this.getChildrenCount = function() {
@@ -136,9 +145,9 @@ module.exports = function(){
     data.children.push(newNeighbor);
   };
   
-	this.removeChild = function(address, sendPort) {
-    let childIndex = data.children.findIndex(c => c.address === address && c.sendPort === sendPort);
-    let neighborIndex = data.neighbors.findIndex(n => n.address === address && n.sendPort === sendPort);
+	this.removeChild = function(child) {
+    let childIndex = data.children.findIndex(c => c.address === child.address && c.sendPort === child.sendPort);
+    let neighborIndex = data.neighbors.findIndex(n => n.address === child.address && n.sendPort === child.sendPort);
     
     if(childIndex >= 0 && neighborIndex >= 0) {
       // Returns removed child
@@ -174,6 +183,21 @@ module.exports = function(){
 
     return result;
   }
+  /************************** CHILD ***************************/
+  // Child spots are reserved while waiting on response/error from addChild request
+  this.addPotentialChild = function() {
+    data.potentialChildren++;
+  }
+  
+  this.removePotentialChild = function() {
+    if(data.potentialChildren > 0) {
+      data.potentialChildren--;
+    }
+  };
+
+  this.getPotentialChildren = function() {
+    return data.potentialChildren;
+  }
 
   /************************* CHANNEL **************************/
   this.setPosition = function(position) {
@@ -191,14 +215,28 @@ module.exports = function(){
   this.getChannel = function() {
     return data.channel;
   }
-  /************************ ENCRYPTION ************************/
-	this.getKeys = function(){
-		return data.keys;
-	};
 
-	this.setKeys = function(keys){
-		data.keys = keys;
-	};
+  /************************ ENCRYPTION ************************/
+  this.setChannelAsymmetricKeys = function(keys) {
+    data.asymmetricKeys = {
+      publicKey: ursa.createPublicKey(keys.publicKey),
+      privateKey: ursa.createPrivateKey(keys.privateKey)
+    };
+  };
+
+  this.addSymmetricKey = function(key) {
+    if(data.symmetricKeys.indexOf(key) === -1) {
+      data.symmetricKeys.push(key);
+    }
+  };
+
+  this.removeSymmetricKey = function(key) {
+    let index = data.symmetricKeys.indexOf(key);
+
+    if(index >= 0) {
+      data.symmetricKeys.splice(index, 1);
+    }
+  };
 };
 
 /************************* HELPERS **************************/

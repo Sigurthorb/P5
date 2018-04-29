@@ -13,9 +13,6 @@ const dgram = require('dgram');
 function P5Server(opts) {
   let self = this;
 	let db = new DataBase();
-  let routerEmitter = new EventEmitter();
-  let router = new Router(db, routerEmitter);
-  EventEmitter.call(this);
 
   db.setSendPort(opts.sendPort);
   db.setReceivePort(opts.receivePort);
@@ -24,12 +21,20 @@ function P5Server(opts) {
 	//Store this on the db
 	db.setTopologyServers(opts.topologyServers);
 	db.setNetworkId(opts.networkId);
-	db.setKeys(opts.keys);
+	db.setChannelAsymmetricKeys(opts.keys);
   db.setPosition(opts.position);
-  console.log("Position: ", opts.position);
+	console.log("Position: ", opts.position);
+	
+	let routerEmitter = new EventEmitter();
+  let router = new Router(db, routerEmitter);
+  EventEmitter.call(this);
 
   //Add parent if necessary
-  if(opts.parent) db.setParent(opts.parent.address, opts.parent.sendPort, opts.parent.receivePort, opts.parent.position);
+  if(opts.parent) {
+		db.setParent(opts.parent.address, opts.parent.sendPort, opts.parent.receivePort, opts.parent.position);
+	} else {
+		db.setAsRoot();
+	}
 
   //Make this accessible to the user
   this.key = opts.keys.publicKey;
@@ -43,41 +48,63 @@ function P5Server(opts) {
 	}
 
 	this.stop = function() {
-    //router.sendLeaveMsg();
+    router.leaveNetwork();
 		router.stopListen();
     //topology.leave();
 	}
 
-	this.sendSynMsg = function(buffer) {
-  	// validation
-  	try {
-    		router.sendSynMsg(buffer); // TAKES A BUFFER
-  	} catch(err) {
+  // this be promise for error reporting?
+	this.sendSynMsg = function(publicKey, opts) {
+    // opts values are optional client side, needs to be defined before entering router.
+    // {channel: string, symmetricKey: string, data: Buffer}
+    // symmetricKey validation length and type
+    // data buffer max length to be defined
 
-  	}
+    let channel = opts.channel;
+    let symmetricKey = opts.symmetricKey
+    let data = opts.data;
+
+    // validation
+    db.addSymmetricKey(symmetricKey);
+    router.sendSynMsg(publicKey, channel, symmetricKey, data);
+
 	};
 
-  this.sendDataMsg = function(buffer) {
-    // validation
-    try {
-        router.sendSynMsg(buffer); // TAKES A BUFFER
-    } catch(err) {
-
-    }
+  // this be promise for error reporting?
+  this.sendDataMsg = function(symmetricKey, dataBuffer, channel = "") {
+    //validation
+    router.sendDataMsg(channel, symmetricKey, dataBuffer);
   };
 
   //Forward event to the user
-  routerEmitter.on("synMsg", data => {
-    self.emit("message", data);
+  routerEmitter.on("synMessage", data => {
+    /*
+    data: {
+      symmetricKey: string,
+      channel: string,
+      data: buffer
+    }
+    */
+    self.emit("synMessage", data);
   });
 
-  routerEmitter.on("dataMsg", data => {
-    self.emit("message", data);
+  routerEmitter.on("dataMessage", data => {
+    /*
+    data: {
+      symmetricKey: string,
+      data: buffer
+    }
+    */
+    self.emit("dataMessage", data);
   });
 
-  // routerEmitter.on("parentLeft", data => {
-  //   this.stop();
-  // });
+  routerEmitter.on("parentLeft", data => {
+    router.stopListen();
+    self.emit("parentLeft", "");
+  })
+
+  // router error/status events to be defined.
+
 
 	//Start joinServer -- Will listen for candidate nodes
 	let jServer = new joinServer({

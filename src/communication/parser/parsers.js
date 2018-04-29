@@ -1,6 +1,12 @@
-// Currently expecting BigEndian as that is  'network byte order'
-
+let config = require("../../config.json");
 let Parser = require("binary-parser-encoder").Parser;
+
+var MessageParser = new Parser()
+  .endianess("big")
+  .int32("checksum")
+  .buffer("packet", {
+    "readUntil": "eof"
+  });
 
 var PacketParser = new Parser()
   .endianess("big")
@@ -40,35 +46,33 @@ var PacketParser = new Parser()
     }
   })
   .bit6("bitmask")
+  .int32("checksum")
   .buffer("data", {
     "readUntil": "eof"
   });
 
-let parsePacket = function(buff) {
-  let data = PacketParser.parse(buff);
-  data.channel = data.channel.slice(0, data.bitmask);
-  return data;
-}
+let SynParser = new Parser()
+  .endianess("big")
+  .string("symmetricKey", {
+    length: config.crypto.SymmetricKeySizeBits
+  })
+  .uint32("channel", {
+    formatter: function(channelInt) {
+      return channelInt.toString(2).padStart(32,0);
+    },
+    encoder: function(channelString) {
+      // Expecting channelString will be written left to right
+      // 0 will be padded on the back
+      return parseInt(channelString.padEnd(32,0), 2);
 
-/*
- * CreatePacket Data structure:
- * {
- *   packetType: {"DATA", "SYN", "JOIN", "LEAVE"}
- *   channel: "010101010101010101",
- *   bitmask: 6, [if not set, defaults to channel length] (optional)
- *   data: data as a buffer
- * }
- * 
-*/
-
-let createPacket = function(data) { // Need to allocate memory for the final size buffer;
-  if(!data.bitmask) 
-    data.bitmast = data.channel.length;
-  let packet = PacketParser.encode(data);
-  return packet;
-}
+    }
+  })
+  .bit6("bitmask")
+  .buffer("data", {
+    "readUntil": "eof"
+  });
 
 module.exports = {
-  parsePacket: parsePacket,
-  createPacket: createPacket
-};
+  MessageParser,
+  PacketParser,
+}
