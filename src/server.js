@@ -31,7 +31,7 @@ function P5Server(opts) {
 
   //Add parent if necessary
   if(opts.parent) {
-		db.setParent(opts.parent.address, opts.parent.sendPort, opts.parent.receivePort, opts.parent.position);
+		db.setParent(opts.parent.address, opts.parent.sendPort, opts.parent.receivePort, opts.parent.position, opts.parent.symmetricKey);
 	} else {
 		db.setAsRoot();
 	}

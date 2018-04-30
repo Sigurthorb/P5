@@ -1,55 +1,82 @@
-let ursa = require("ursa");
-let util = require("../util");
+const config = require("../config.json");
+const util = require("../util");
+const crypto = require("crypto");
+const log = require("../log");
+
+const symmetricAlgorithm = "aes-256-ctr";
 
 module.exports = function(db) {
+  // TODO ADD PADDING for packet not only block
 
-  this.encryptAsymmetric = function(packet, key) {
-
+  // try catch should be around usage of this function
+  this.encryptAsymmetric = function(buffer, publicKey) {
+    // Support encryption of 215 bytes because of padding, result is 256 bytes
+    let encrypted = crypto.publicEncrypt(publicKey, buffer);
+    return encrypted;
   }
 
   this.decryptAsymmetric = function(buffer, checksum) {
-    return buffer, true;
+    let privateKey = db.getPrivateKey();
+    try {
+      let decrypted = crypto.privateDecrypt(privateKey, buffer);
+      if(util.verifyChecksum(decrypted, checksum)) {
+        return decrypted;
+      }
+    } catch (err) {
+      log("error", "Failed to decrypt asymmetric encrypted buffer with error: %s", err.message, err);
+    }
   }
 
   this.decryptSymmetricWithChecksum = function(buffer, checksum) {
-    return buffer, "symmetricKey";
+    try {
+      let keys = db.getSymmetricKeys();
+      let IV = buffer.slice(0, 16);
+      buffer = buffer.slice(16);
+
+      for(let i = 0; i < keys.length; i++) {
+        let decipher = crypto.createDecipheriv(symmetricAlgorithm, keys[i], IV);
+        let decrypted = Buffer.concat([decipher.update(buffer), decipher.final()]);
+
+        if(util.verifyChecksum(decrypted, checksum)) {
+          return decrypted, keys[i];
+        }
+      }
+    } catch (err) {
+      log("error", "Failed to decrypt symmetric with checksum with error: %s", err.message, err);
+      return;
+    }
   }
 
   this.decryptSymmetricWithKey = function(buffer, key) {
-    return buffer
+    try {
+      let IV = buffer.slice(0, 16);
+      buffer = buffer.slice(16);
+
+      let decipher = crypto.createDecipheriv(symmetricAlgorithm, key, IV);
+      let decryptedBuffers = [];
+
+      decryptedBuffers.push(decipher.update(buffer));
+      decryptedBuffers.push(decipher.final())
+
+      return Buffer.concat(decryptedBuffers);
+    } catch(err) {
+      log("error", "Failed to decrypt symmetric with key with error: %s", err.message, err);
+      return Buffer.from("");
+    }
   }
 
   this.encryptSymmetric = function(buffer, key) {
-    return buffer
-  }
+    try {
+      let IV = crypto.randomBytes(16);
+      let cipher = crypto.createCipheriv(symmetricAlgorithm, key, IV);
 
-  this.encryptSynPacket = function(packet, key) {
-    let keys = storage.asymmetric[name];
-    if(!keys) {
-      console.log("ERROR: No asymmetric key with name '" + name + "'");
-      return;
+      let encryptedBuffers = [IV];
+      encryptedBuffers.push(cipher.update(buffer));
+      encryptedBuffers.push(cipher.final());
+
+      return Buffer.concat(encryptedBuffers);
+    } catch(err) {
+      log("error", "Failed to encrypt symmetric with error: %s", err.message, err);
     }
-    packet.data = keys.pub.encrypt(packet.data, "base64", "utf8");
-
-    return packet;
-  }
-
-  this.decryptSynPacket = function(packet) {
-    let output = "";
-
-    let indexes = Object.keys(storage.asymmetric);
-    for(let i = 0; i < indexes.length; i++) {
-      let keys = storage.asymmetric[indexes[i]];
-      output = keys.pub.decrypt(packet.data, "base64", "utf8");
-
-      if(output !== "") {
-        // I think this is the output for correct keys
-        packet.data = output;
-        break;
-      }
-    }
-    //              true if packet is for us
-    return [packet, output !== ""];
-
   }
 }

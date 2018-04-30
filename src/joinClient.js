@@ -29,7 +29,7 @@ exports.addChild = function(srcIp, srcPort, position, sendPort, receivePort, key
 		position: position,
 		sendPort: sendPort,
 		receivePort:receivePort,
-		key:key
+		symmetricKey:key
 	};
 
 	return axios.post('http://' + srcIp + ':' + srcPort + '/parentingRequest', params)

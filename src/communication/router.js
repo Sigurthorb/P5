@@ -8,6 +8,7 @@ const EnDeCrypt = require("./encryption");
 const validator = require("../validator");
 const util = require("../util");
 const joinClient = require("../joinClient");
+const keyGenerator = require("../crypto/keyGenerator");
 
 
 let isDestinedForNode = function(nodePosition, destinationChannel) {
@@ -131,11 +132,11 @@ module.exports = function Router(db, event) {
   };
 
   let addChild = function(address, port, address, childPosition) {
-    let symmetricKey = "SoonToBeGenerated";
+    let symmetricKey = keyGenerator.generateSymmetricKey();
     
     log("info", "Sending a join invitiation to candidate child with position %s", childPosition);
     joinClient.addChild(address, port, childPosition, db.getSendPort(), db.getReceivePort(), symmetricKey).then((obj) => {
-      log("debug", "Successfully sent ParentRequest to candidate channel %s, adding as neighbor");
+      log("debug", "Successfully sent ParentRequest to candidate channel %s, adding as neighbor", childPosition);
       db.addChild(address, obj.sendPort, obj.receivePort, childPosition, symmetricKey);
       db.removePotentialChild();
     }).catch((err) => {
@@ -244,7 +245,7 @@ module.exports = function Router(db, event) {
     }
 
     let messageObj = parser.parseMessageBuffer(message);
-    messageObj.packet = encryption.decryptSymmetricWithKey(messageObj.packet, routingData.sender.key);
+    messageObj.packet = encryption.decryptSymmetricWithKey(messageObj.packet, routingData.sender.symmetricKey);
 
     if(!util.verifyChecksum(messageObj.packet, messageObj.checksum)) {
       log("warn", "Packet from sender with address %s:%d with position '%s' did not pass checksum verification, ignoring message", remote.address, remote.port, routingData.sender.position, messageObj);
@@ -255,9 +256,8 @@ module.exports = function Router(db, event) {
     
     if(isDestinedForNode(db.getChannel(), packetObj.channel)) {
       if(packetObj.packetType == "SYN") {
-        let decryptedData, successfulDecryption;
-        [decryptedData, successfulDecryption] = encryption.decryptAsymmetric(packetObj.data, packetObj.checksum);
-        if(successfulDecryption) {
+        let decryptedData = encryption.decryptAsymmetric(packetObj.data, packetObj.checksum);
+        if(decryptedData) {
           log("info", "Successfully received a SYN packet from the network");
           let synObj = parser.parseSynBuffer(decryptedData);
           event.emit("synMessage", {
@@ -345,10 +345,15 @@ module.exports = function Router(db, event) {
       channel: channel,
       checksum: util.getChecksum(synBuff)
     };
-    
-    packetObj.data = encryption.encryptAsymmetric(buffer, publicKey);
-    let packet = parser.getParent
-    sendPacketToCandidates(getApplicableCandidatesForRouting(channel), getCandidatespacketObj);
+
+    try {
+      packetObj.data = encryption.encryptAsymmetric(buffer, publicKey);
+    } catch(err) {
+      log("error", "Failed to encrypt data with publicKey, not sending, error: %s", err.message, err);
+      return;
+    }
+
+    sendPacketToCandidates(getApplicableCandidatesForRouting(channel), parser.createPacketBuffer(packetObj));
   }
 
   this.sendDataMsg = function(buffer, symmetricKey, channel) {
@@ -359,7 +364,7 @@ module.exports = function Router(db, event) {
     };
 
     packetObj.data = encryption.encryptSymmetric(buffer, symmetricKey);
-    sendPacketObjToNeighbors(packet);
+    sendPacketToCandidates(getApplicableCandidatesForRouting(channel), parser.createPacketBuffer(packetObj));
   }
 
   this.startListen = function() {
@@ -369,7 +374,7 @@ module.exports = function Router(db, event) {
         internalIp.v4().then(localIp => {
           
           db.setAddress(publicIp);
-      
+          log("info", "MY POSITION IS: %s \nPublicKey is:  \n\n%s\n\njoinInfo: %s:%d", db.getPosition(), db.getPublicKey(), publicIp, db.getJoinPort());
           listener.on("listening", function() {
             let address = listener.address();
             log("info", "UDP Server listening on '%s:%d'", address.address, address.port);

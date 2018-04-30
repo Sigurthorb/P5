@@ -1,5 +1,4 @@
 let util = require("./util");
-let ursa = require("ursa");
 
 module.exports = function(){
 	let data = {
@@ -219,16 +218,28 @@ module.exports = function(){
   /************************ ENCRYPTION ************************/
   this.setChannelAsymmetricKeys = function(keys) {
     data.asymmetricKeys = {
-      publicKey: ursa.createPublicKey(keys.publicKey),
-      privateKey: ursa.createPrivateKey(keys.privateKey)
+      publicKey: keys.publicKey,
+      privateKey: keys.privateKey
     };
   };
+
+  this.getPrivateKey = function() {
+    return data.asymmetricKeys.privateKey;
+  }
+
+  this.getPublicKey = function() {
+    return data.asymmetricKeys.publicKey;
+  }
 
   this.addSymmetricKey = function(key) {
     if(data.symmetricKeys.indexOf(key) === -1) {
       data.symmetricKeys.push(key);
     }
   };
+
+  this.getSymmetricKeys = function() {
+    return data.symmetricKeys;
+  }
 
   this.removeSymmetricKey = function(key) {
     let index = data.symmetricKeys.indexOf(key);

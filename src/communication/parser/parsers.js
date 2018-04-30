@@ -54,7 +54,7 @@ var PacketParser = new Parser()
 let SynParser = new Parser()
   .endianess("big")
   .string("symmetricKey", {
-    length: config.crypto.SymmetricKeySizeBits
+    length: 32
   })
   .uint32("channel", {
     formatter: function(channelInt) {

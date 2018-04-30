@@ -12,7 +12,8 @@ let getChecksum = function(buffer) {
 }
 
 let verifyChecksum = function(buffer, checksum) {
-  return getChecksum(buffer) === checksum;
+  let correctChecksum = getChecksum(buffer);
+  return correctChecksum === checksum;
 }
 
 //Decide on a channel based on topology, size and public key
@@ -34,7 +35,7 @@ let pickChannel = function(topology, k, min, max) {
 	topologyArr.filter(ch => ch[0] === key.slice(0, ch[0].length));
 	
 	//Loop over every channel
-	for(let i=0;i<topologyArr.length;i++){
+	for(let i=0;i<topologyArr.length;i++) {
 		//Try to match security params (efficiency will be met by picking the smallest that matches security)
 		if(topologyArr[i][1] > min) {
 			return topologyArr[i][0];
@@ -45,9 +46,22 @@ let pickChannel = function(topology, k, min, max) {
 	return "";
 }
 
+/****************** DATA SIZES ********************/
+
+let getDataPacketBufferSize = function() {
+
+}
+
+let getSynPacketBufferSize = function() {
+
+}
+
 module.exports = {
-  getRandomNum: getRandomNum,
-  getChecksum: getChecksum,
-  verifyChecksum: verifyChecksum,
-  pickChannel: pickChannel
+  getRandomNum,
+  getChecksum,
+  verifyChecksum,
+  pickChannel,
+  getDataPacketBufferSize,
+  getSynPacketBufferSize
+
 }
