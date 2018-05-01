@@ -42,16 +42,19 @@ function P5Server(opts) {
 
 	this.start = function() {
 		router.startListen();
-	}
+	};
 
 	this.stop = function() {
     router.leaveNetwork();
-		router.stopListen();
-  }
+    router.stopListen();
+    //topology.leave();
+  };
   
   this.addSymmetricKey = function(key) {
     db.addSymmetricKey(key);
-  }
+  };
+
+    //this.removeSymmetricKey = db.removeSymmetricKey;
 
   // this be promise for error reporting?
 	this.sendSynMsg = function(publicKey, opts) {
@@ -104,6 +107,7 @@ function P5Server(opts) {
   })
 
   // router error/status events to be defined.
+
 
 	//Start joinServer -- Will listen for candidate nodes
 	let jServer = new joinServer({
