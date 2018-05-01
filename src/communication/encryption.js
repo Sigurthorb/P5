@@ -19,11 +19,13 @@ module.exports = function(db) {
     let privateKey = db.getPrivateKey();
     try {
       let decrypted = crypto.privateDecrypt(privateKey, buffer);
-      if(util.verifyChecksum(decrypted, checksum)) {
+      // not required since error thrown for wrong private keys but adds integrity
+      if(util.verifyChecksum(decrypted, checksum)) { 
         return decrypted;
       }
     } catch (err) {
-      log("error", "Failed to decrypt asymmetric encrypted buffer with error: %s", err.message, err);
+      //Packet not destined for this node.
+      return;
     }
   }
 
@@ -38,12 +40,13 @@ module.exports = function(db) {
         let decrypted = Buffer.concat([decipher.update(buffer), decipher.final()]);
 
         if(util.verifyChecksum(decrypted, checksum)) {
-          return decrypted, keys[i];
+          return [decrypted, keys[i]];
         }
       }
+      return [];
     } catch (err) {
       log("error", "Failed to decrypt symmetric with checksum with error: %s", err.message, err);
-      return;
+      return [];
     }
   }
 

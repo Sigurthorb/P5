@@ -1,7 +1,7 @@
 let { PacketParser, MessageParser, SynParser } = require("./parsers");
 
 let createPacketBuffer = function(obj) {
-  obj.bitmast = obj.channel.length;
+  obj.bitmask = obj.channel.length;
   let buff = PacketParser.encode(obj);
   return buff;
 }
@@ -24,7 +24,7 @@ let parseMessageBuffer = function(buff) {
 }
 
 let createSynBuffer = function(obj) {
-  obj.bitmast = obj.channel.length;
+  obj.bitmask = obj.channel.length;
   let buff = SynParser.encode(obj);
   return buff
 }
@@ -39,5 +39,7 @@ module.exports = {
   createPacketBuffer,
   parsePacketBuffer,
   createMessageBuffer,
-  parseMessageBuffer
+  parseMessageBuffer,
+  createSynBuffer,
+  parseSynBuffer
 };

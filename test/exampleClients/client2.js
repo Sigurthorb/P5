@@ -1,12 +1,12 @@
-var P5 = require('../index');
+var P5 = require('../../index');
 
 var opts = {
-  sendPort:3004,
-  receivePort:3005,
+  sendPort:3005,
+  receivePort:3006,
   joinPort:4002
 };
 
-P5.join("127.0.0.1", 4002, 0, 1, opts).then(p5server => {
+P5.join("192.168.1.8", 4000, 0, 4, opts).then(p5server => {
   var server = p5server;
 
   console.log("Got your server.");
@@ -22,6 +22,8 @@ P5.join("127.0.0.1", 4002, 0, 1, opts).then(p5server => {
     console.log("Data message Received\n");
     console.log(msg);
   });
+
+
 
   server.start();
 

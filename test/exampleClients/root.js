@@ -1,12 +1,12 @@
-var P5 = require('../index');
+var P5 = require('../../index');
 
 var opts = {
-  sendPort:3040,
-  receivePort:3041,
-  joinPort:4016
+  sendPort:3000,
+  receivePort:3001,
+  joinPort:4000
 };
 
-P5.join("172.18.0.2", 3001, 2, 4, opts).then(p5server => {
+P5.create(["p5-topology.herokuapp.com"], opts).then(p5server => {
   var server = p5server;
 
   console.log("Got your server.");
@@ -20,9 +20,6 @@ P5.join("172.18.0.2", 3001, 2, 4, opts).then(p5server => {
 
   server.start();
 
-  setTimeout(function() {
-    server.stop();
-  }, 6000);
 
 }).catch(err => {
   console.log("Could not create server...");

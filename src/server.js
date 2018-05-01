@@ -47,7 +47,11 @@ function P5Server(opts) {
 	this.stop = function() {
     router.leaveNetwork();
 		router.stopListen();
-	}
+  }
+  
+  this.addSymmetricKey = function(key) {
+    db.addSymmetricKey(key);
+  }
 
   // this be promise for error reporting?
 	this.sendSynMsg = function(publicKey, opts) {
@@ -67,9 +71,9 @@ function P5Server(opts) {
 	};
 
   // this be promise for error reporting?
-  this.sendDataMsg = function(symmetricKey, dataBuffer, channel = "") {
+  this.sendDataMsg = function(symmetricKey, data, channel = "") {
     //validation
-    router.sendDataMsg(channel, symmetricKey, dataBuffer);
+    router.sendDataMsg(symmetricKey, data, channel);
   };
 
   //Forward event to the user

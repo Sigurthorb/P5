@@ -150,8 +150,30 @@ module.exports = function Router(db, event) {
     // Propagate up if this node is fully reserved
     let position = db.getPosition();
     let childCount = db.getChildrenCount();
-    if(db.isRoot() || packetObj.channel === position || (routingData.fromParent && db.getChannel() === packetObj.channel)) {
-      if((childCount + db.getPotentialChildren()) >= 2) {
+    let noMoreRoomForChildren = (childCount + db.getPotentialChildren()) >= 2;
+
+    if(packetObj.channel.startsWith(position) && position !== packetObj.channel) { // startsWith is true when equal
+      // needs to be routed further down, select right child
+      let candidates = db.getChildren();
+      let candidate = undefined;
+      for(let i = 0; i < candidates.length; i++) {
+        if(candidates[i] && packetObj.channel.startsWith(candidates[i].position)) {
+          candidate = candidates[i];
+          break;
+        }
+      }
+
+      // if applicable child does not exist, error, channel not exist
+      if(!candidate) {
+        log("warn", "Received a join to a channel that doesn't exist, ignoring join");
+      } else {
+        // OUTGOING PACKET
+        let packet = parser.createPacketBuffer(packetObj);
+        sendPacket(packet, candidate);
+      }
+    } else if ((position.startsWith(packetObj.channel) && routingData.fromParent) || position === packetObj.channel) { 
+      // inside correct channel and from parent, route down randomly or assign as child     
+      if(noMoreRoomForChildren) {
         // children saturated, random pick child to forward to
         if(childCount === 2) {
           util.getRandomNum(0,1).then(pick => {
@@ -180,32 +202,12 @@ module.exports = function Router(db, event) {
           });
         }
       }
-    } else if(packetObj.channel.startsWith(position)) {
-      // Being routed, needs to go further down
-      // select applicable child that starts with data.position
-      let candidates = db.getChildren();
-      let candidate = undefined;
-      for(let i = 0; i < candidates.length; i++) {
-        if(candidates[i] && packetObj.channel.startsWith(candidates[i].position)) {
-          candidate = candidates[i];
-          break;
-        }
-      }
-
-      // if applicable child does not exist, error, channel not exist
-      if(!candidate) {
-        log("warn", "Received a join to a channel that doesn't exist, ignoring join");
-      } else {
-        // OUTGOING PACKET
-        let packet = parser.createPacketBuffer(packetObj);
-        sendPacket(packet, candidate);
-      }
-    } else if(!routingData.fromParent) {
+    } else if (!routingData.fromParent) {
       // OUTGOING PACKET
       let packet = parser.createPacketBuffer(packetObj);
       sendPacket(packet, db.getParent());
     } else {
-      log("error", "Missing case in join protocol: routingData\n%j", routingData, packetObj);
+      log("error", "Missing case in join protocol\nnode pos: %s\n routingData\n%j",position, routingData, packetObj);
     }
   }
 
@@ -228,6 +230,7 @@ module.exports = function Router(db, event) {
           log("info", "Parent has left the network, please re-join");
           event.emit("parentLeft", "");
         }
+        log("info", "%d nodes have been notified of node departure", candidates.length);
       });
     } else {
       // Received leave from child, remove from neighbors
@@ -238,9 +241,9 @@ module.exports = function Router(db, event) {
 
   let messageHandler = function(message, remote) {
     let routingData = db.getNeighborRoutingData(remote);
-
     if(!routingData.sender) {
-      log("warn", "Received message from a unknown neighbor, ignoring message");
+      // Can enter here if a node sends a leave message but is still listening
+      log("warn", "Received message from a unknown neighbor with address %s:%d, ignoring message", remote.address, remote.port);
       return;
     }
 
@@ -293,7 +296,7 @@ module.exports = function Router(db, event) {
     }
     
     if (packetObj.packetType === "SYN" || packetObj.packetType === "DATA") {
-      sendMessageObjToCandidates(routingData.candidates, packetObj);
+      sendMessageObjToCandidates(routingData.candidates, messageObj);
     } else {
       log("error", "Missing case for packet type. packet: \n", JSON.stringify(packetObj, null, 2), "\n\nRouting data: \n", JSON.stringify(routingData, null, 2));
     }
@@ -347,7 +350,7 @@ module.exports = function Router(db, event) {
     };
 
     try {
-      packetObj.data = encryption.encryptAsymmetric(buffer, publicKey);
+      packetObj.data = encryption.encryptAsymmetric(synBuff, publicKey);
     } catch(err) {
       log("error", "Failed to encrypt data with publicKey, not sending, error: %s", err.message, err);
       return;
@@ -356,14 +359,14 @@ module.exports = function Router(db, event) {
     sendPacketToCandidates(getApplicableCandidatesForRouting(channel), parser.createPacketBuffer(packetObj));
   }
 
-  this.sendDataMsg = function(buffer, symmetricKey, channel) {
+  this.sendDataMsg = function(symmetricKey, data, channel) {
     let packetObj = {
       packetType: "DATA",
       channel: channel,
-      checksum: util.getChecksum(buffer)
+      checksum: util.getChecksum(data)
     };
 
-    packetObj.data = encryption.encryptSymmetric(buffer, symmetricKey);
+    packetObj.data = encryption.encryptSymmetric(data, symmetricKey);
     sendPacketToCandidates(getApplicableCandidatesForRouting(channel), parser.createPacketBuffer(packetObj));
   }
 

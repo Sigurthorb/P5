@@ -75,4 +75,5 @@ let SynParser = new Parser()
 module.exports = {
   MessageParser,
   PacketParser,
-}
+  SynParser
+};
