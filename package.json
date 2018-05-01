@@ -1,6 +1,6 @@
 {
   "name": "p5-node",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "NPM packet for a P5 node",
   "main": "index.js",
   "scripts": {
