@@ -7,6 +7,7 @@ const Router = require('./communication/router');
 const util = require('util');
 const http = require('http');
 const dgram = require('dgram');
+const keyGenerator = require("./crypto/keyGenerator");
 
 
 //This is the contructor
@@ -47,7 +48,7 @@ function P5Server(opts) {
 	this.stop = function() {
     router.leaveNetwork();
     router.stopListen();
-    //topology.leave();
+    topology.leaveNetwork(db.getTopologyServers(), db.getNetworkId(), db.getPosition());
   };
   
   this.addSymmetricKey = function(key) {
@@ -57,20 +58,26 @@ function P5Server(opts) {
     //this.removeSymmetricKey = db.removeSymmetricKey;
 
   // this be promise for error reporting?
-	this.sendSynMsg = function(publicKey, opts) {
+	this.sendSynMsg = function(publicKey, data, opts = {}) {
     // opts values are optional client side, needs to be defined before entering router.
-    // {channel: string, symmetricKey: string, data: Buffer}
+    // {channel: string, symmetricKey: string}
     // symmetricKey validation length and type
     // data buffer max length to be defined
+    let channel = opts.channel || "";
+    let symmetricKey = opts.symmetricKey || keyGenerator.generateSymmetricKey(); 
 
-    let channel = opts.channel;
-    let symmetricKey = opts.symmetricKey
-    let data = opts.data;
+    if(!opts.symmetricKey) {
+      symmetricKey = keyGenerator.generateSymmetricKey();
+      
+    } else {
+      symmetricKey = opts.symmetricKey;
+    }
 
-    // validation
-    db.addSymmetricKey(symmetricKey);
+    // validation - TO DO Check the length of symmetric key
+    if(db.getSymmetricKeys().indexOf(symmetricKey) === -1){
+      db.addSymmetricKey(symmetricKey);
+    }     
     router.sendSynMsg(publicKey, channel, symmetricKey, data);
-
 	};
 
   // this be promise for error reporting?
