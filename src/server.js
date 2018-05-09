@@ -78,6 +78,8 @@ function P5Server(opts) {
       db.addSymmetricKey(symmetricKey);
     }     
     router.sendSynMsg(publicKey, channel, symmetricKey, data);
+
+    return symmetricKey;
 	};
 
   // this be promise for error reporting?
