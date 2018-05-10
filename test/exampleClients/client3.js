@@ -6,7 +6,8 @@ var opts = {
   joinPort:4003
 };
 
-P5.join("192.168.1.8", 4000, 0, 4, opts).then(p5server => {
+let address = "10.104.220.62";
+P5.join(address, 4000, 0, 4, opts).then(p5server => {
   var server = p5server;
 
   console.log("Got your server.");

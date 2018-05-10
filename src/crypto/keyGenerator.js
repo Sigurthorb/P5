@@ -3,8 +3,9 @@ const crypto = require("crypto");
 const config = require("../config.json");
 
 let generateSymmetricKey = function() {
-  //return crypto.randomBytes(32).toString("utf8");// this key is to long because string is 8 bit but base64 is 6 bit
-  return "thisistherightlengthofkeyforencr";
+  console.log()
+  return crypto.randomBytes(128).toString("hex");// this key is to long because string is 8 bit but base64 is 6 bit
+  //return "thisistherightlengthofkeyforencr";
 }
 
 //Returns a promise with the key pair

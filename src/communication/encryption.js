@@ -36,7 +36,8 @@ module.exports = function(db) {
       buffer = buffer.slice(16);
 
       for(let i = 0; i < keys.length; i++) {
-        let decipher = crypto.createDecipheriv(symmetricAlgorithm, keys[i], IV);
+        console.log((new Buffer(keys[i])).byteLength)
+        let decipher = crypto.createDecipheriv(symmetricAlgorithm, new Buffer(keys[i]), IV);
         let decrypted = Buffer.concat([decipher.update(buffer), decipher.final()]);
 
         if(util.verifyChecksum(decrypted, checksum)) {
@@ -54,8 +55,8 @@ module.exports = function(db) {
     try {
       let IV = buffer.slice(0, 16);
       buffer = buffer.slice(16);
-
-      let decipher = crypto.createDecipheriv(symmetricAlgorithm, key, IV);
+      console.log((new Buffer(key)).byteLength)
+      let decipher = crypto.createDecipheriv(symmetricAlgorithm, new Buffer(key), IV);
       let decryptedBuffers = [];
 
       decryptedBuffers.push(decipher.update(buffer));
@@ -71,7 +72,8 @@ module.exports = function(db) {
   this.encryptSymmetric = function(buffer, key) {
     try {
       let IV = crypto.randomBytes(16);
-      let cipher = crypto.createCipheriv(symmetricAlgorithm, key, IV);
+      console.log((new Buffer(key)).byteLength)
+      let cipher = crypto.createCipheriv(symmetricAlgorithm, new Buffer(key), IV);
 
       let encryptedBuffers = [IV];
       encryptedBuffers.push(cipher.update(buffer));
