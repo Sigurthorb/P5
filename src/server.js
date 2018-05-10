@@ -112,7 +112,8 @@ function P5Server(opts) {
 
   routerEmitter.on("parentLeft", data => {
     router.stopListen();
-    self.emit("parentLeft", "");
+    topology.leaveNetwork(db.getTopologyServers(), db.getNetworkId(), db.getPosition());
+    self.emit("parentLeft");
   })
 
   // router error/status events to be defined.

@@ -219,6 +219,8 @@ module.exports = function Router(db, event) {
         if(!routingData.thisNodeLeft) {
           log("info", "Parent has left the network, please re-join");
           event.emit("parentLeft");
+        } else {
+          event.emit("YouLeft");
         }
         return;
       }
@@ -228,7 +230,9 @@ module.exports = function Router(db, event) {
         // Expecting that the node that is leaving does not need event emmited
         if(!routingData.thisNodeLeft) {
           log("info", "Parent has left the network, please re-join");
-          event.emit("parentLeft", "");
+          event.emit("ParentLeft");
+        } else {
+          event.emit("YouLeft");
         }
         log("info", "%d nodes have been notified of node departure", candidates.length);
       });
