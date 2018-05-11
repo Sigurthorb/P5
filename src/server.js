@@ -42,7 +42,8 @@ function P5Server(opts) {
   this.channel = opts.channel;
 
 	this.start = function() {
-		router.startListen();
+    //Returns a promise of the public ip where the server is listening
+		return router.startListen();
 	};
 
 	this.stop = function() {
@@ -53,6 +54,10 @@ function P5Server(opts) {
   
   this.addSymmetricKey = function(key) {
     db.addSymmetricKey(key);
+  };
+
+  this.getTopologyServer = function() {
+    return db.getTopologyServers()[0];
   };
 
     //this.removeSymmetricKey = db.removeSymmetricKey;
@@ -101,6 +106,8 @@ function P5Server(opts) {
   });
 
   routerEmitter.on("dataMessage", data => {
+    console.log("New Data Message!");
+    console.log(data);
     /*
     data: {
       symmetricKey: string,

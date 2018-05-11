@@ -373,8 +373,8 @@ module.exports = function Router(db, event) {
   this.startListen = function() {
     if(!serverListening) {
       //Get the public and local ip's before starting the listener
-      externalIp.v4().then(publicIp => {
-        internalIp.v4().then(localIp => {
+      return externalIp.v4().then(publicIp => {
+        return internalIp.v4().then(localIp => {
           
           db.setAddress(publicIp);
           log("info", "MY POSITION IS: %s \nPublicKey is:  \n\n%s\n\njoinInfo: %s:%d", db.getPosition(), db.getPublicKey(), publicIp, db.getJoinPort());
@@ -394,8 +394,12 @@ module.exports = function Router(db, event) {
     
           //Start Listener
           listener.bind(db.getReceivePort(), localIp);
+
+          return publicIp;
         });
       });
+    } else {
+          return new Promise((resolve) => { resolve('0.0.0.0') });
     }
   }
 
