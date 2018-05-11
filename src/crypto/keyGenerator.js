@@ -1,10 +1,10 @@
 const pem = require("pem");
 const crypto = require("crypto");
 const config = require("../config.json");
+const secureRandomString = require('secure-random-string');
 
 let generateSymmetricKey = function() {
-  //return crypto.randomBytes(32).toString("utf8");// this key is to long because string is 8 bit but base64 is 6 bit
-  return "thisistherightlengthofkeyforencr";
+  return secureRandomString();
 }
 
 //Returns a promise with the key pair
