@@ -30,6 +30,18 @@ let generateKeyPair = function() {
   });
 }
 
+let generateServerCertificates = function() {
+  return new Promise(function(resolve, reject) {
+    pem.createCertificate({days: 365, selfSigned: true}, function(err, keys) {
+      if(err) {
+        reject();
+      } else {
+        resolve(keys);
+      }
+    })
+  });
+}
+
 let convertKeyToBinary = function(key){
   key = key.replace("-----BEGIN PUBLIC KEY-----", "").replace("-----END PUBLIC KEY-----", "").replace(/(?:\r\n|\r|\n)/g, "").trim();
   let binaryKey = key.split('').map(c => c.charCodeAt(0).toString(2)).join('');
@@ -37,7 +49,8 @@ let convertKeyToBinary = function(key){
 }
 
 module.exports = {
-  generateSymmetricKey: generateSymmetricKey,
-  generateKeyPair: generateKeyPair,
-  convertKeyToBinary: convertKeyToBinary,
+  generateSymmetricKey,
+  generateKeyPair,
+  convertKeyToBinary,
+  generateServerCertificates
 };

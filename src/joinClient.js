@@ -1,8 +1,10 @@
+const https = require("https");
+https.globalAgent.options.rejectUnauthorized = false
 const axios = require('axios');
 
 exports.getTopologyServers = function(srcIp, srcPort){
 	//TO DO Use the first for now, but try different server in the future, if the first one fails
-	return axios.get('http://' + srcIp + ':' + srcPort + '/getTopologyServers')
+	return axios.get('https://' + srcIp + ':' + srcPort + '/getTopologyServers')
 	  .then(response => {
 	  	return response.data;
 	  })
@@ -13,7 +15,7 @@ exports.getTopologyServers = function(srcIp, srcPort){
 
 exports.joinNetwork = function(srcIp, srcPort, channel, joinPort){
 	//TO DO Use the first for now, but try different server in the future, if the first one fails
-	return axios.post('http://' + srcIp + ':' + srcPort + '/requestToJoin', { channel:channel, port:joinPort })
+	return axios.post('https://' + srcIp + ':' + srcPort + '/requestToJoin', { channel:channel, port:joinPort })
 	.then(response => {
 	  	return response.data;
 	  })
@@ -32,7 +34,7 @@ exports.addChild = function(srcIp, srcPort, position, sendPort, receivePort, key
 		symmetricKey:key
 	};
 
-	return axios.post('http://' + srcIp + ':' + srcPort + '/parentingRequest', params)
+	return axios.post('https://' + srcIp + ':' + srcPort + '/parentingRequest', params)
 	.then(response => {
 		console.log(response.data);
 	  	return response.data;
