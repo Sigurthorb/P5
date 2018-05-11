@@ -4,7 +4,6 @@ const EventEmitter = require('events');
 const util = require('util');
 
 //This is the contructor
-// TODO: change to 2 tab size
 function JoinServer(opts) {
 	let listener;
 	let self = this;
