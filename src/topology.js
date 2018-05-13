@@ -9,6 +9,7 @@ exports.createNetwork = function(servers){
 		  })
 		  .catch(error => {
 		    console.error(error);
+		    return error;
 		  });		
 	}
 
@@ -23,6 +24,7 @@ exports.joinNetwork = function(servers, id, ch){
 		  })
 		  .catch(error => {
 		    console.error(error);
+		    return error;
 		  });		
 	}
 
@@ -38,6 +40,7 @@ exports.getTopology = function(servers, id){
 		  })
 		  .catch(error => {
 		    console.error(error);
+		    return error;
 		  });		
 	}
 
@@ -52,6 +55,7 @@ exports.leaveNetwork = function(servers, id, ch){
 		  })
 		  .catch(error => {
 		    console.error(error);
+		    return error;
 		  });		
 	}
 

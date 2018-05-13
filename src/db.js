@@ -156,9 +156,6 @@ module.exports = function(){
   };
 
   this.getNeighborRoutingData = function(sender) {
-    console.log('Sender Info')
-    console.log(sender);
-    
     let result = {
       candidates: [],
       sender: null,

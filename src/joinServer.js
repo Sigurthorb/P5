@@ -6,6 +6,7 @@ const util = require('util');
 const keyGenerator = require("./crypto/keyGenerator");
 
 //This is the contructor
+//JOin server returns a promise with the server object
 function JoinServer(opts) {
 	let listener;
 	let self = this;
@@ -14,7 +15,7 @@ function JoinServer(opts) {
    	let topologyServers = opts.topologyServers || null;
   	let networkId = opts.networkId || null;
   
-  	keyGenerator.generateServerCertificates().then((keys) => {
+  	return keyGenerator.generateServerCertificates().then((keys) => {
 
 	    let server = express();
 	    server.use(bodyParser.json()); // support json encoded bodies
@@ -66,11 +67,21 @@ function JoinServer(opts) {
 	      res.json(data);
 	    });
 	  
-	    listener = https.createServer({key: keys.serviceKey, cert: keys.certificate}, server);
-	    
-	    listener.listen(opts.joinPort, "0.0.0.0");
-	    
-	    console.log('Listening at https://localhost:' + opts.joinPort);
+	  	self.start = function(){
+            listener = https.createServer({key: keys.serviceKey, cert: keys.certificate}, server);
+            return new Promise((resolve, reject) => {
+                console.log('Starting server...');
+                listener.listen(opts.joinPort, "0.0.0.0", (err) => {
+                    if(err){
+                        reject(err);
+                    } else {
+                        resolve();
+                        console.log('Listening at https://localhost:' + opts.joinPort);  
+                    } 
+                });
+                
+            });
+        }
 
 	    self.setTopologyServers = function(servers) {
 			topologyServers = servers;
@@ -84,8 +95,9 @@ function JoinServer(opts) {
 	      console.log("Closing connection...");
 	      if(listener) listener.close();
 	    };
-	});
 
+        return self;
+	});
 };
 
 util.inherits(JoinServer, EventEmitter);

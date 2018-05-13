@@ -42,14 +42,24 @@ exports.create = function(topologyServers, opts = {}){
 //srcNodePort: The Join Port of a Node on the Network
 //Returns: A newly generated public key for the root node
 exports.join = function(srcNodeIp, srcNodePort, minNodes, maxNodes, opts){
-	let keys, netId, topologyServers, channel;
-	let jServer = new JoinServer({ 	sendPort:opts.sendPort || 33444,
-									receivePort:opts.receivePort || 33555,
-									joinPort:opts.joinPort || 33666 });
+	let keys, netId, topologyServers, channel, jServer;
+	let jServerParams = {     
+        sendPort:opts.sendPort || 33444,
+        receivePort:opts.receivePort || 33555,
+        joinPort:opts.joinPort || 33666 
+    }; 
 
-	console.log("Generating Keys...");
-	//First, generate public/private keys
-	return keyGenerator.generateKeyPair().then(k => {
+    //First, create the join server, so it can start generating the certs
+    return new JoinServer(jServerParams).then(server => {
+        jServer = server;
+        //Now, start the join server 
+        return jServer.start();
+
+    }).then(() => {
+	    //Generate public/private keys
+        return keyGenerator.generateKeyPair();
+
+	}).then(k => {
 		keys = k;
 		console.log("Keys Generated. pubKey: ", keys.publicKey);
 		console.log("Requesting Topology Servers...");
@@ -75,10 +85,10 @@ exports.join = function(srcNodeIp, srcNodePort, minNodes, maxNodes, opts){
 		console.log("Requesting To Join...");	
 		//Request to join
 		return JoinClient.joinNetwork(srcNodeIp, srcNodePort, channel, opts.joinPort);
+
 	}).then(resp => {
-    console.log("Listening for Parent Request...");
-	// TODO: Implement timeout!
-	// TODO: change to 2 tab size
+        console.log("Listening for Parent Request...");
+	   // TODO: Implement timeout!
 		//New promise returns a P5Server
 		return new Promise(function(resolve, reject) {  
 			//Now listen for a parent request...
@@ -118,27 +128,4 @@ exports.join = function(srcNodeIp, srcNodePort, minNodes, maxNodes, opts){
 			});
 		})
 	});
-
-
-	//Request channel topology list [{ch:n nodes}] from srcNode
-
-	//Select Channel from List
-
-	//Request to Join Channel
-
-	//Listen for response from parent. If response times out, try again a few times.
-
-	//When a response is received, send back an ACK and start node's server (listen for any messages/join requests from parent)
-
-	//Finally send topology server a request to add ip to channel
-
-};
-
-//Leaves the P5 Network
-//Returns: A promise with a value of true or false
-exports.leave = function(){
-	//Send message to all neighbor nodes telling them you're leaving (parent will remove you from the list). Children will have to leave too and rejoin
-
-	//Send Request to topology server to remove ip from channels
-
 };
