@@ -95,9 +95,6 @@ exports.join = function(srcNodeIp, srcNodePort, minNodes, maxNodes, opts){
 				let position = parent.position;
 				parent.position = parent.position.slice(0, parent.position.length-1);
 
-				//Stop temp jServer listener
-				jServer.close();
-
 				console.log("Instantiating Server...");
 				let server = new P5Server({
 					networkId:netId, 
@@ -108,7 +105,8 @@ exports.join = function(srcNodeIp, srcNodePort, minNodes, maxNodes, opts){
 					sendPort:opts.sendPort || 33444,
 					receivePort:opts.receivePort || 33555,
 					joinPort:opts.joinPort || 33666,
-					parent:parent
+					parent:parent,
+					joinServer:jServer
 				});
 				console.log("Server Instantiated. Position: '" + position + "'");
 

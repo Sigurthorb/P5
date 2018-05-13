@@ -11,6 +11,7 @@ const topology = require("./topology");
 
 //This is the contructor
 function P5Server(opts) {
+  let jServer;
   let self = this;
 	let db = new DataBase();
 
@@ -46,6 +47,7 @@ function P5Server(opts) {
 	};
 
 	this.stop = function() {
+    jServer.close();
     router.leaveNetwork();
     router.stopListen();
     topology.leaveNetwork(db.getTopologyServers(), db.getNetworkId(), db.getPosition());
@@ -130,11 +132,20 @@ function P5Server(opts) {
 
 
 	//Start joinServer -- Will listen for candidate nodes
-	let jServer = new joinServer({
-		topologyServers: opts.topologyServers,
-		networkId: opts.networkId,
-		joinPort: opts.joinPort
-	});
+  if(opts.joinServer) {
+    jServer = opts.joinServer;
+    jServer.setTopologyServers(opts.topologyServers);
+    jServer.setNetworkId(opts.networkId);
+  } else {
+    jServer = new joinServer({
+      topologyServers: opts.topologyServers,
+      networkId: opts.networkId,
+      joinPort: opts.joinPort
+    });
+  }
+
+  
+
 
 	jServer.on("joinRequest", data => {
     console.log(data);
