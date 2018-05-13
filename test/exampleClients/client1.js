@@ -23,14 +23,7 @@ P5.join("192.168.1.8", 4000, 0, 4, opts).then(p5server => {
     console.log(msg);
   });
 
-
-
   server.start();
-
-  setTimeout(function(){
-    server.stop();
-    
-  }, 8000);
 
 }).catch(err => {
   console.log("Could not create server...");

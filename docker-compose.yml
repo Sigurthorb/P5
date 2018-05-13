@@ -101,7 +101,6 @@ services:
      - RECEIVE_PORT=3014
      - SEND_PORT=4007
      - JOIN_PORT=3015
-     - LEAVE=TRUE
      - WAIT_CONN=28
   p5-join8:
     image: p5

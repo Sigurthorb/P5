@@ -102,8 +102,9 @@ module.exports = function Router(db, event) {
 
   let sendPacketSync = function(candidates, packet) {
     return new Promise((resolve, reject) => {
-      if(candidates.lenght === 0) {
+      if(candidates.length === 0) {
         resolve();
+        return;
       }
 
       let messageObj = {
@@ -175,11 +176,11 @@ module.exports = function Router(db, event) {
       // inside correct channel and from parent, route down randomly or assign as child     
       if(noMoreRoomForChildren) {
         // children saturated, random pick child to forward to
+        let packet = parser.createPacketBuffer(packetObj);
         if(childCount === 2) {
           util.getRandomNum(0,1).then(pick => {
             let children = db.getChildren();
             // OUTGOING PACKETS
-            let packet = parser.createPacketBuffer(packetObj);
             sendPacket(packet, children[pick]);
           });
         } else if (childCount === 1) {
@@ -218,6 +219,7 @@ module.exports = function Router(db, event) {
       sendPacketSync(candidates, packet).then(() => {
         // Expecting that the node that is leaving does not need event emmited
         log("info", "%d nodes have been notified of node departure", candidates.length);
+        db.clearNeightbors();
         if(!routingData.thisNodeLeft) {
           log("info", "Parent has left the network, please re-join");
           event.emit("ParentLeft");
@@ -251,7 +253,7 @@ module.exports = function Router(db, event) {
     let packetObj = parser.parsePacketBuffer(messageObj.packet);
     
     if(isDestinedForNode(db.getChannel(), packetObj.channel)) {
-      if(packetObj.packetType == "SYN") {
+      if(packetObj.packetType === "SYN") {
         let decryptedData = encryption.decryptAsymmetric(packetObj.data, packetObj.checksum);
         if(decryptedData) {
           log("info", "Successfully received a SYN packet from the network");
@@ -262,7 +264,7 @@ module.exports = function Router(db, event) {
             data: synObj.data
           });
         }
-      } else if(packetObj.packetType == "DATA") {
+      } else if(packetObj.packetType === "DATA") {
         let dataDecrypted, symmetricKey;
         [dataDecrypted, symmetricKey] = encryption.decryptSymmetricWithChecksum(packetObj.data, packetObj.checksum);
         if(symmetricKey) {

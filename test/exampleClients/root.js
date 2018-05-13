@@ -13,12 +13,9 @@ P5.create(["p5-topology.herokuapp.com"], opts).then(p5server => {
   console.log("This is your public key: ", server.key);
   console.log("This is your channel:", server.channel);
 
-  server.on("message", (msg) => {
-    console.log("Message Received\n");
-    console.log(msg);
-  });
-
   server.start();
+
+  server.addSymmetricKey("thisisasymmetrickeythatis32chara");
 
 
 }).catch(err => {

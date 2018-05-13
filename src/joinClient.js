@@ -3,44 +3,34 @@ https.globalAgent.options.rejectUnauthorized = false
 const axios = require('axios');
 
 exports.getTopologyServers = function(srcIp, srcPort){
-	//TO DO Use the first for now, but try different server in the future, if the first one fails
-	return axios.get('https://' + srcIp + ':' + srcPort + '/getTopologyServers')
-	  .then(response => {
-	  	return response.data;
-	  })
-	  .catch(error => {
-	    console.error(error);
-	  });		
+  //TO DO Use the first for now, but try different server in the future, if the first one fails
+  return axios.get('https://' + srcIp + ':' + srcPort + '/getTopologyServers')
+    .then(response => {
+      return response.data;
+    });
 };
 
 exports.joinNetwork = function(srcIp, srcPort, channel, joinPort){
-	//TO DO Use the first for now, but try different server in the future, if the first one fails
-	return axios.post('https://' + srcIp + ':' + srcPort + '/requestToJoin', { channel:channel, port:joinPort })
-	.then(response => {
-	  	return response.data;
-	  })
-	.catch(error => {
-	    console.error(error);
-	});
+  //TO DO Use the first for now, but try different server in the future, if the first one fails
+  return axios.post('https://' + srcIp + ':' + srcPort + '/requestToJoin', { channel:channel, port:joinPort })
+    .then(response => {
+      return response.data;
+    });
 };
 
 exports.addChild = function(srcIp, srcPort, position, sendPort, receivePort, key){
-	console.log("Add Child Request Sent...");
-	//Thor will encrypt this using openSSl somehow
-	let params = {
-		position: position,
-		sendPort: sendPort,
-		receivePort:receivePort,
-		symmetricKey:key
-	};
+  console.log("Add Child Request Sent...");
+  let params = {
+    position: position,
+    sendPort: sendPort,
+    receivePort:receivePort,
+    symmetricKey:key
+  };
 
-	return axios.post('https://' + srcIp + ':' + srcPort + '/parentingRequest', params)
-	.then(response => {
-		console.log(response.data);
-	  	return response.data;
-	  })
-	.catch(error => {
-	    console.error(error);
-	});
+  return axios.post('https://' + srcIp + ':' + srcPort + '/parentingRequest', params)
+    .then(response => {
+      return response.data;
+    });
+
 };
 

@@ -7,16 +7,16 @@ var opts = {
 };
 
 let pub = "-----BEGIN PUBLIC KEY-----\n\
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAz+YWB2/XY74zmeAB6Oii\n\
-LRQsoHB9SijIOT90ZzGjbpU8kPyCbWoAozF8bSCU3359jq9ZhnHT43MUWMjJzLgi\n\
-SM/RckVGHr3T0SIZKvJeaXgRrsyr4G41emlFTxbLSVcyKmTvOXax8gskgxCdKoCT\n\
-UuGEziLowxsuS0r+mmNYOmoHAUPIoGAY9DzxIrKZoyn/XnxXkvXkeoEMAhEpVj7B\n\
-9jg/RHBaECbO1Web7lGk17l1auV3Z08Jg2VCjpOluEHbEMF2/coe23YeyjTHX3Ra\n\
-BJYp478oRm3MIZNqwL8Zr66VSZUOJU7eoKkW0tqX1mwNvdWnT9OWsuuuYZbEVZ4g\n\
-HQIDAQAB\n\
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxrP3U2z3lrhnhS2xwMUU\n\
+wBtjLZhwc5e50MwdObZWsGU7peTRyliJjTzGb6+pYXYv3YUvmp6nFewfS2qjsZ/8\n\
+bhRrHAYtaFAhwFjJF3fJPgodOn7VrXJaAT/xmAryPQ0hxbE1QVk+r2R1Ay8K/9eA\n\
+PYAJbfsDBW5FS3VYkpUNV+lKR73U3InCGE9LW06gE00ejpKzSvi5zPHRx1WKyYxZ\n\
+QUhW0CqdcnlFHl66cYfIc3hELrWapqwYGGMxymCRY4etpbkgK3to82cHSS1nD4mg\n\
+kyqS76BKl08u8+wzSZLY+98tCnHh/WLYJG1l48DCC3aUJ7CdYbeKpMfJPAe2wlIj\n\
+XQIDAQAB\n\
 -----END PUBLIC KEY-----";
 
-let channel = "00";
+let channel = "";
 
 let symmetricKey = "thisisasymmetrickeythatis32chara";
 
@@ -42,7 +42,7 @@ P5.join("192.168.1.8", 4000, 0, 1, opts).then(p5server => {
   server.start();
   setTimeout(function() {
     console.log("SENDING");
-    server.sendSynMsg(pub,{channel: channel, symmetricKey: symmetricKey, data: data});
+    server.sendSynMsg(pub, data, {channel: channel, symmetricKey: symmetricKey});
   }, 3000);
 
 }).catch(err => {
