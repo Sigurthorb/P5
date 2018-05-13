@@ -25,7 +25,6 @@ P5.join("192.168.1.8", 4000, 0, 4, opts).then(p5server => {
 
   server.start();
 
-  server.addSymmetricKey("thisisasymmetrickeythatis32chara");
 
 }).catch(err => {
   console.log("Could not create server...");

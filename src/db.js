@@ -48,7 +48,7 @@ module.exports = function(){
   };
   
   this.setSendPort = function(port) {
-    data.sendPort = port;
+    data.sendPort = parseInt(port);
   }
 
   this.getSendPort = function() {
@@ -56,7 +56,7 @@ module.exports = function(){
   }
 
   this.setReceivePort = function(port) {
-    data.receivePort = port;
+    data.receivePort = parseInt(port);
   }
 
   this.getReceivePort = function(port) {
@@ -64,7 +64,7 @@ module.exports = function(){
   }
 
   this.setJoinPort = function(port) {
-    data.joinPort = port;
+    data.joinPort = parseInt(port);
   }
 
   this.getJoinPort = function(port) {
@@ -153,6 +153,12 @@ module.exports = function(){
       data.children.splice(childIndex, 1);
       return data.neighbors.splice(neighborIndex, 1);
     }
+  };
+
+  this.clearNeightbors = function() {
+    data.neighbors = [];
+    data.children = [];
+    data.parent = null;
   };
 
   this.getNeighborRoutingData = function(sender) {
