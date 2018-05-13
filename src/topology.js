@@ -6,11 +6,7 @@ exports.createNetwork = function(servers){
 		return axios.post('http://' + servers[0] + '/network')
 		  .then(response => {
 		  	return response.data;
-		  })
-		  .catch(error => {
-		    console.error(error);
-		    return error;
-		  });		
+		  });	
 	}
 
 };
@@ -21,11 +17,7 @@ exports.joinNetwork = function(servers, id, ch){
 		return axios.post('http://' + servers[0] + '/network/' + id + '/channel/' + ch) 
 		  .then(response => {
 		  	return response.data;
-		  })
-		  .catch(error => {
-		    console.error(error);
-		    return error;
-		  });		
+		  });	
 	}
 
 };
@@ -37,11 +29,7 @@ exports.getTopology = function(servers, id){
 		return axios.get('http://' + servers[0] + '/network/' + id)
 		  .then(response => {
 		  	return response.data;
-		  })
-		  .catch(error => {
-		    console.error(error);
-		    return error;
-		  });		
+		  });	
 	}
 
 };
@@ -52,11 +40,7 @@ exports.leaveNetwork = function(servers, id, ch){
 		return axios.delete('http://' + servers[0] + '/network/' + id + '/channel/' + ch) 
 		  .then(response => {
 		  	return response.data;
-		  })
-		  .catch(error => {
-		    console.error(error);
-		    return error;
-		  });		
+		  });	
 	}
 
 };
