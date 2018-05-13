@@ -399,10 +399,15 @@ module.exports = function Router(db, event) {
   }
 
   this.stopListen = function() {
-    if(serverListening) {
-      listener.close(function() {
-        serverListening = false;
-      });
-    }
+    return new Promise((resolve, reject) => {
+        if(serverListening) {
+          listener.close(() => {
+            serverListening = false;
+            resolve();
+          });
+        } else {
+          resolve();
+        }
+    });
   }
 }

@@ -24,7 +24,6 @@ function P5Server(opts) {
 	db.setNetworkId(opts.networkId);
 	db.setChannelAsymmetricKeys(opts.keys);
     db.setPosition(opts.position);
-	console.log("Position: ", opts.position);
 	
 	let routerEmitter = new EventEmitter();
     let router = new Router(db, routerEmitter);
@@ -62,8 +61,6 @@ function P5Server(opts) {
                 joinPort: opts.joinPort
             }).then(server => {
                 jServer = server;
-                console.log('jServer');
-                console.log(jServer);
 
                 jServer.on("joinRequest", data => {
                     console.log(data);
@@ -86,10 +83,19 @@ function P5Server(opts) {
     };
 
     this.stop = function() {
-        jServer.close();
+        //First, send leave message and wait utinl it actually happens
         router.leaveNetwork();
-        router.stopListen();
-        topology.leaveNetwork(db.getTopologyServers(), db.getNetworkId(), db.getPosition());
+        return new Promise((resolve, reject) => {
+            //Once the packet has been sent, continue
+            routerEmitter.on("YouLeft", () => {
+                //Close Servers then resolve
+                Promise.all([
+                    jServer.close(), 
+                    router.stopListen(),
+                    topology.leaveNetwork(db.getTopologyServers(), db.getNetworkId(), db.getPosition())
+                ]).then(resolve);
+            });
+        });            
     };
 
     this.addSymmetricKey = function(key) {
@@ -155,16 +161,17 @@ function P5Server(opts) {
         }
         */
         self.emit("dataMessage", data);
-        });
+    });
 
-        routerEmitter.on("ParentLeft", data => {
-        router.stopListen();
-        topology.leaveNetwork(db.getTopologyServers(), db.getNetworkId(), db.getPosition());
-        self.emit("ParentLeft");
+    routerEmitter.on("ParentLeft", data => {
+        //Close Servers then emit
+        Promise.all([
+            jServer.close(), 
+            router.stopListen(),
+            topology.leaveNetwork(db.getTopologyServers(), db.getNetworkId(), db.getPosition())
+        ]).then(() => {
+            self.emit("parentLeft");
         });
-
-        routerEmitter.on("YouLeft", () => {
-        self.emit("YouLeft");
     });
 
     // router error/status events to be defined.

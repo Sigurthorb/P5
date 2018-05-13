@@ -36,10 +36,13 @@ exports.getTopology = function(servers, id){
 
 exports.leaveNetwork = function(servers, id, ch){
 	if(servers.length) {
+		console.log('Requesting to leave topology server...');
+		console.log(servers, ' ', id, ' ', ch);
 		//TO DO Use the first for now, but try different server in the future, if the first one fails
 		return axios.delete('http://' + servers[0] + '/network/' + id + '/channel/' + ch) 
 		  .then(response => {
-		  	return response.data;
+		  	console.log('Left topology Server');
+		  	return response.statusCode == 200;
 		  });	
 	}
 

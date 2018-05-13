@@ -90,10 +90,20 @@ function JoinServer(opts) {
 		self.setNetworkId = function(id) {
 			networkId = id;
 		};
-	  
+	   
+        //Returns a promise when the server has closed
 	    self.close = function(){
 	      console.log("Closing connection...");
-	      if(listener) listener.close();
+          return new Promise((resolve, reject) => {
+              if(listener) {
+                listener.close(() => {
+                    resolve();
+                });
+              } else {
+                resolve();
+              }
+          }); 
+
 	    };
 
         return self;

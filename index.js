@@ -17,7 +17,7 @@ exports.create = function(topologyServers, opts = {}){
 		console.log("Generating Keys...");
 		//Generate Keys
 		return keyGenerator.generateKeyPair().then(keys => {
-			console.log("Keys Generated. pubKey: ", keys.publicKey);
+			console.log("Keys Generated.");
 			console.log("Instantiating Server...");
 			let server = new P5Server({
 				networkId:netId, 
@@ -61,7 +61,7 @@ exports.join = function(srcNodeIp, srcNodePort, minNodes, maxNodes, opts){
 
 	}).then(k => {
 		keys = k;
-		console.log("Keys Generated. pubKey: ", keys.publicKey);
+		console.log("Keys Generated.");
 		console.log("Requesting Topology Servers...");
 		//Get Topology Servers
 		return JoinClient.getTopologyServers(srcNodeIp, srcNodePort);
@@ -69,7 +69,7 @@ exports.join = function(srcNodeIp, srcNodePort, minNodes, maxNodes, opts){
 	}).then(data => {
 		netId = data.netId;
 		topologyServers = data.servers;
-		console.log("Got Topology Servers. Servers", JSON.stringify(data.servers));
+		console.log("Got Topology Servers. Servers. Net ID: ", netId);
 		console.log("Requesting Topology...");
 		//Get Topology
 		return topology.getTopology(data.servers, data.netId);
@@ -88,17 +88,16 @@ exports.join = function(srcNodeIp, srcNodePort, minNodes, maxNodes, opts){
 
 	}).then(resp => {
         console.log("Listening for Parent Request...");
-	   // TODO: Implement timeout!
 		//New promise returns a P5Server
 		return new Promise(function(resolve, reject) {  
 			//Now listen for a parent request...
 			let connected = false;
 			setTimeout(function() {
 				if(!connected) {
-					console.log("ERROR: Did not receive a invite after 10sek");
-					process.exit();
+					console.log("ERROR: Did not receive a invite after 20 seconds");
+					reject("ERROR: Did not receive a invite after 20 seconds");
 				}
-			}, 10000);
+			}, 20000);
 			jServer.on("parentRequest", parent => {
 				connected = true;
 				console.log("Got Parent Request.");
@@ -118,7 +117,7 @@ exports.join = function(srcNodeIp, srcNodePort, minNodes, maxNodes, opts){
 					parent:parent,
 					joinServer:jServer
 				});
-				console.log("Server Instantiated. Position: '" + position + "'");
+				console.log("Server Instantiated.");
 
 				//Add topology information
 				topology.joinNetwork(topologyServers, netId, position);
