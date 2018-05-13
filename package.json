@@ -25,6 +25,7 @@
     "pem": "^1.12.4",
     "public-ip": "^2.4.0",
     "random-number-csprng": "^1.0.2",
+    "secure-random-string": "^1.1.0",
     "winston": "^3.0.0-rc5"
   },
   "devDependencies": {}

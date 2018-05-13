@@ -214,23 +214,16 @@ module.exports = function Router(db, event) {
   let processLeavePacket = function(packetObj, routingData) {
     let candidates = routingData.candidates; 
     if(routingData.fromParent) {
-      if(candidates.length === 0) {
-        // Expecting that the node that is leaving does not need event emmited
-        if(!routingData.thisNodeLeft) {
-          log("info", "Parent has left the network, please re-join");
-          event.emit("parentLeft");
-        }
-        return;
-      }
-      
       let packet = parser.createPacketBuffer(packetObj);
       sendPacketSync(candidates, packet).then(() => {
         // Expecting that the node that is leaving does not need event emmited
+        log("info", "%d nodes have been notified of node departure", candidates.length);
         if(!routingData.thisNodeLeft) {
           log("info", "Parent has left the network, please re-join");
-          event.emit("parentLeft", "");
+          event.emit("ParentLeft");
+        } else {
+          event.emit("YouLeft");
         }
-        log("info", "%d nodes have been notified of node departure", candidates.length);
       });
     } else {
       // Received leave from child, remove from neighbors

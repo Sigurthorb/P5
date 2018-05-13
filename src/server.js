@@ -5,9 +5,8 @@ const joinServer = require("./joinServer");
 const DataBase = require('./db');
 const Router = require('./communication/router');
 const util = require('util');
-const http = require('http');
-const dgram = require('dgram');
 const keyGenerator = require("./crypto/keyGenerator");
+const topology = require("./topology");
 
 
 //This is the contructor
@@ -117,10 +116,15 @@ function P5Server(opts) {
     self.emit("dataMessage", data);
   });
 
-  routerEmitter.on("parentLeft", data => {
+  routerEmitter.on("ParentLeft", data => {
     router.stopListen();
-    self.emit("parentLeft", "");
-  })
+    topology.leaveNetwork(db.getTopologyServers(), db.getNetworkId(), db.getPosition());
+    self.emit("ParentLeft");
+  });
+
+  routerEmitter.on("YouLeft", () => {
+    self.emit("YouLeft");
+  });
 
   // router error/status events to be defined.
 
