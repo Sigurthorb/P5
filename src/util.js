@@ -1,9 +1,23 @@
 let randomNumber = require("random-number-csprng");
 let ADLER32 = require("adler-32");
+let crypto = require("crypto");
 
 // Both values are inclusive - promise
 let getRandomNum = function(low, high) {
     return randomNumber(low, high);
+}
+
+let getRandomBytes = function(num) {
+  // temp thread blocker
+  return crypto.randomBytes(num);
+}
+
+let fillDataBuff = function(buff) { // 976 bytes
+  return Buffer.concat([buff, getRandomBytes(976 - buff.byteLength)], 976);
+}
+
+let fillSynJoinDataBuff = function(buff) { // 992 bytes
+  return Buffer.concat([buff, getRandomBytes(992 - buff.byteLength)], 992);
 }
 
 let getChecksum = function(buffer) {
@@ -48,12 +62,12 @@ let pickChannel = function(topology, k, min, max) {
 
 /****************** DATA SIZES ********************/
 
-let getDataPacketBufferSize = function() {
-
+let getUserMaxDataBufferSize = function() {
+  return 976;
 }
 
-let getSynPacketBufferSize = function() {
-
+let getUserMaxSynDataBufferSize = function() {
+  return 193;
 }
 
 module.exports = {
@@ -61,7 +75,9 @@ module.exports = {
   getChecksum,
   verifyChecksum,
   pickChannel,
-  getDataPacketBufferSize,
-  getSynPacketBufferSize
-
+  getUserMaxDataBufferSize,
+  getUserMaxSynDataBufferSize,
+  fillDataBuff,
+  fillSynJoinDataBuff,
+  getRandomBytes
 }

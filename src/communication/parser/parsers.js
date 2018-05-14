@@ -54,7 +54,7 @@ var PacketParser = new Parser()
 let SynParser = new Parser()
   .endianess("big")
   .string("symmetricKey", {
-    length: 32
+    length: 16
   })
   .uint32("channel", {
     formatter: function(channelInt) {
@@ -67,7 +67,11 @@ let SynParser = new Parser()
 
     }
   })
-  .bit6("bitmask")
+  .bit6("bitmask");
+
+let DataParser = new Parser()
+  .endianess("big")
+  .uint16("realLen")
   .buffer("data", {
     "readUntil": "eof"
   });
@@ -75,5 +79,9 @@ let SynParser = new Parser()
 module.exports = {
   MessageParser,
   PacketParser,
-  SynParser
+  SynParser,
+  DataParser
 };
+/*
+
+  */

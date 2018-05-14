@@ -1,5 +1,5 @@
 var P5 = require('../../index');
-
+var util = require("../../src/util");
 var opts = {
   sendPort:3015,
   receivePort:3016,
@@ -7,21 +7,21 @@ var opts = {
 };
 
 let pub = "-----BEGIN PUBLIC KEY-----\n\
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxrP3U2z3lrhnhS2xwMUU\n\
-wBtjLZhwc5e50MwdObZWsGU7peTRyliJjTzGb6+pYXYv3YUvmp6nFewfS2qjsZ/8\n\
-bhRrHAYtaFAhwFjJF3fJPgodOn7VrXJaAT/xmAryPQ0hxbE1QVk+r2R1Ay8K/9eA\n\
-PYAJbfsDBW5FS3VYkpUNV+lKR73U3InCGE9LW06gE00ejpKzSvi5zPHRx1WKyYxZ\n\
-QUhW0CqdcnlFHl66cYfIc3hELrWapqwYGGMxymCRY4etpbkgK3to82cHSS1nD4mg\n\
-kyqS76BKl08u8+wzSZLY+98tCnHh/WLYJG1l48DCC3aUJ7CdYbeKpMfJPAe2wlIj\n\
-XQIDAQAB\n\
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3rjfCrJoNPx94WEUul+Y\n\
+z6+9ys1do0afmMWJWlfzGR/qmlqw3E1JyCQYSQxlSQ78eCvP6MGrs4E/QrRp6rPp\n\
+EXhUyyFCpQs4jDHOJoDD+7TSsa6e8g6MIHHP4bCy7WgMaItS1Azh18HKOwVf476P\n\
+hIBBsDO4sND3QOSE8bMWH2Im32xxMHDy0JuGDN8nxeHPmh/Eu1asaqpmqTP+cto8\n\
+TyoO/6Jn/FsetzdTiBeEN0Z79ybUN2RZLPaqtUmx8g6sMbo6HdHmCMfffRA7wkfa\n\
+XCVCLRLoLEGGrYhTFfHKLAyQ/PTZS0EPUX6moHyeQY7aZnRhlqqzPnJpKc0kJzcf\n\
+9QIDAQAB\n\
 -----END PUBLIC KEY-----";
 
-let channel = "";
+let channel = "000";
 
-let symmetricKey = "thisisasymmetrickeythatis32chara";
+let symmetricKey = "keythatis32chara";
 
-let data = Buffer.from("TestingTesting");
-
+let data = util.getRandomBytes(720);
+data = new Buffer("TTTESTING");
 P5.join("192.168.1.8", 4000, 0, 1, opts).then(p5server => {
   var server = p5server;
 

@@ -4,7 +4,7 @@ const config = require("../config.json");
 const secureRandomString = require('secure-random-string');
 
 let generateSymmetricKey = function() {
-  return secureRandomString();
+  return secureRandomString({length: 16});
 }
 
 //Returns a promise with the key pair

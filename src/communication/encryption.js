@@ -3,7 +3,7 @@ const util = require("../util");
 const crypto = require("crypto");
 const log = require("../log");
 
-const symmetricAlgorithm = "aes-256-ctr";
+const symmetricAlgorithm = "aes-128-ctr";
 
 module.exports = function(db) {
   // TODO ADD PADDING for packet not only block
@@ -15,14 +15,11 @@ module.exports = function(db) {
     return encrypted;
   }
 
-  this.decryptAsymmetric = function(buffer, checksum) {
+  this.decryptAsymmetric = function(buffer) {
     let privateKey = db.getPrivateKey();
     try {
       let decrypted = crypto.privateDecrypt(privateKey, buffer);
-      // not required since error thrown for wrong private keys but adds integrity
-      if(util.verifyChecksum(decrypted, checksum)) { 
-        return decrypted;
-      }
+      return decrypted;
     } catch (err) {
       //Packet not destined for this node.
       return;

@@ -11,170 +11,217 @@ const topology = require("./topology");
 
 //This is the contructor
 function P5Server(opts) {
-    let jServer;
-    let self = this;
-	let db = new DataBase();
+  let jServer;
+  let self = this;
+  let db = new DataBase();
+  self.isListening = false;
 
-    db.setSendPort(opts.sendPort);
-    db.setReceivePort(opts.receivePort);
-    db.setJoinPort(opts.joinPort);
+  db.setSendPort(opts.sendPort);
+  db.setReceivePort(opts.receivePort);
+  db.setJoinPort(opts.joinPort);
 
-	//Store this on the db
-	db.setTopologyServers(opts.topologyServers);
-	db.setNetworkId(opts.networkId);
-	db.setChannelAsymmetricKeys(opts.keys);
-    db.setPosition(opts.position);
-	
-	let routerEmitter = new EventEmitter();
-    let router = new Router(db, routerEmitter);
-    EventEmitter.call(this);
+  console.log("NodeInfo:\n\tsendPort:%d\n\treceivePort:%d\n\tjoinPort:%d", opts.sendPort, opts.receivePort, opts.joinPort);
 
-    //Add parent if necessary
-    if(opts.parent) {
-    	db.setParent(opts.parent.address, opts.parent.sendPort, opts.parent.receivePort, opts.parent.position, opts.parent.symmetricKey);
-    } else {
-    	db.setAsRoot();
-    }
+  //Store this on the db
+  db.setTopologyServers(opts.topologyServers);
+  db.setNetworkId(opts.networkId);
+  db.setChannelAsymmetricKeys(opts.keys);
+  db.setPosition(opts.position);
 
-    //Update variables and add listener to existing the join server
-    if(opts.joinServer) {
-        jServer = opts.joinServer;
-        jServer.setTopologyServers(opts.topologyServers);
-        jServer.setNetworkId(opts.networkId);
+  let routerEmitter = new EventEmitter();
+  let router = new Router(db, routerEmitter);
+  EventEmitter.call(this);
+
+  //Add parent if necessary
+  if(opts.parent) {
+    db.setParent(opts.parent.address, opts.parent.sendPort, opts.parent.receivePort, opts.parent.position, opts.parent.symmetricKey);
+  } else {
+    db.setAsRoot();
+  }
+
+  //Update variables and add listener to existing the join server
+  if(opts.joinServer) {
+    jServer = opts.joinServer;
+    jServer.setTopologyServers(opts.topologyServers);
+    jServer.setNetworkId(opts.networkId);
+
+    jServer.on("joinRequest", data => {
+      router.sendJoinMsg(data.address, data.port, data.channel);  
+    });
+  }
+
+  //Make this accessible to the user
+  this.key = opts.keys.publicKey;
+  this.channel = opts.channel;
+
+  this.stop = function() {
+    self.isListening = false;
+    return new Promise((resolve, reject) => {
+      //Once the packet has been sent, continue
+      routerEmitter.on("YouLeft", () => {
+      //Close Servers then resolve
+        Promise.all([
+          jServer.close(),
+          router.stopListen(),
+          topology.leaveNetwork(db.getTopologyServers(), db.getNetworkId(), db.getPosition())
+        ]).then(resolve);
+      });
+
+      router.leaveNetwork();
+    });
+  };
+
+  this.addSymmetricKey = function(key) {
+    db.addSymmetricKey(key);
+  };
+
+  this.getTopologyServer = function() {
+    return db.getTopologyServers()[0];
+  };
+
+  //Make this accessible to the user
+  this.key = opts.keys.publicKey;
+  this.channel = opts.channel;
+
+  this.start = function() {
+    //Make sure the jServer has been started - If not, start it
+    if(!opts.joinServer) {
+      return new JoinServer({
+        topologyServers: opts.topologyServers,
+        networkId: opts.networkId,
+        joinPort: opts.joinPort
+      }).then(server => {
+        jServer = server;
 
         jServer.on("joinRequest", data => {
-            console.log(data);
-            router.sendJoinMsg(data.address, data.port, data.channel);  
+          router.sendJoinMsg(data.address, data.port, data.channel);
         });
+
+        return jServer.start().then(() => {
+          return router.startListen();
+        }).catch(err => {
+          console.error(err.message);
+        });
+      });
+    } else {
+      //Returns a promise of the public ip where the server is listening
+      return router.startListen();
+    }
+  };
+
+  this.stop = function() {
+    //First, send leave message and wait utinl it actually happens
+    router.leaveNetwork();
+    return new Promise((resolve, reject) => {
+      //Once the packet has been sent, continue
+      routerEmitter.on("YouLeft", () => {
+        //Close Servers then resolve
+        Promise.all([
+          jServer.close(),
+          router.stopListen(),
+          topology.leaveNetwork(db.getTopologyServers(), db.getNetworkId(), db.getPosition())
+        ]).then(resolve);
+      });
+    });
+  };
+
+  this.addSymmetricKey = function(key) {
+      db.addSymmetricKey(key);
+  };
+
+  this.getTopologyServer = function() {
+      return db.getTopologyServers()[0];
+  };
+
+  this.sendSynMsg = function(publicKey, data, opts = {}) {
+    // opts values are optional client side, needs to be defined before entering router.
+    // {channel: string, symmetricKey: string}
+    // symmetricKey validation length and type
+    // data buffer max length to be defined
+    let channel = opts.channel || "";
+    let symmetricKey = opts.symmetricKey || keyGenerator.generateSymmetricKey();
+
+    if(symmetricKey.length !== 16) {
+      return;
     }
 
-    //Make this accessible to the user
-    this.key = opts.keys.publicKey;
-    this.channel = opts.channel;
+    if(!data || !Buffer.isBuffer(data)  || data.byteLength > 720) {
+      return;
+    }
 
-    this.start = function() {
-        //Make sure the jServer has been started - If not, start it
-        if(!opts.joinServer) {
-            return new JoinServer({
-                topologyServers: opts.topologyServers,
-                networkId: opts.networkId,
-                joinPort: opts.joinPort
-            }).then(server => {
-                jServer = server;
+    db.addSymmetricKey(symmetricKey);
 
-                jServer.on("joinRequest", data => {
-                    console.log(data);
-                    router.sendJoinMsg(data.address, data.port, data.channel);  
-                });
+    router.sendSynMsg(publicKey, channel, symmetricKey, data);
 
-                
-                return jServer.start().then(() => {
-                    return router.startListen();
-                }).catch(err => {
-                    console.error(err);
-                });
+    return symmetricKey;
+  };
 
-            });
+  this.sendDataMsg = function(symmetricKey, data, channel = "") {
+    //validation
+    if(!data || !Buffer.isBuffer(data)  || data.byteLength > 976) {
+      return;
+    }
 
-        } else {
-            //Returns a promise of the public ip where the server is listening
-            return router.startListen();
-        }
-    };
+    if(symmetricKey.length !== 16) {
+      return;
+    }
 
-    this.stop = function() {
-        //First, send leave message and wait utinl it actually happens
-        router.leaveNetwork();
-        return new Promise((resolve, reject) => {
-            //Once the packet has been sent, continue
-            routerEmitter.on("YouLeft", () => {
-                //Close Servers then resolve
-                Promise.all([
-                    jServer.close(), 
-                    router.stopListen(),
-                    topology.leaveNetwork(db.getTopologyServers(), db.getNetworkId(), db.getPosition())
-                ]).then(resolve);
-            });
-        });            
-    };
+    router.sendDataMsg(symmetricKey, data, channel);
+  };
 
-    this.addSymmetricKey = function(key) {
-        db.addSymmetricKey(key);
-    };
+  routerEmitter.on("synMessage", data => {
+    /*
+    data: {
+      symmetricKey: string,
+      channel: string,
+      data: buffer
+    }
+    */
+    self.emit("synMessage", data);
+  });
 
-    this.getTopologyServer = function() {
-        return db.getTopologyServers()[0];
-    };
+  routerEmitter.on("dataMessage", data => {
+    /*
+    data: {
+      symmetricKey: string,
+      data: buffer
+    }
+    */
+    self.emit("dataMessage", data);
+  });
 
-    //this.removeSymmetricKey = db.removeSymmetricKey;
-
-    // this be promise for error reporting?
-    this.sendSynMsg = function(publicKey, data, opts = {}) {
-        // opts values are optional client side, needs to be defined before entering router.
-        // {channel: string, symmetricKey: string}
-        // symmetricKey validation length and type
-        // data buffer max length to be defined
-        let channel = opts.channel || "";
-        let symmetricKey = opts.symmetricKey || keyGenerator.generateSymmetricKey(); 
-
-        if(!opts.symmetricKey) {
-          symmetricKey = keyGenerator.generateSymmetricKey();
-          
-        } else {
-          symmetricKey = opts.symmetricKey;
-        }
-
-        // validation - TO DO Check the length of symmetric key
-        if(db.getSymmetricKeys().indexOf(symmetricKey) === -1){
-          db.addSymmetricKey(symmetricKey);
-        }     
-        router.sendSynMsg(publicKey, channel, symmetricKey, data);
-
-        return symmetricKey;
-        };
-
-        // this be promise for error reporting?
-        this.sendDataMsg = function(symmetricKey, data, channel = "") {
-        //validation
-        router.sendDataMsg(symmetricKey, data, channel);
-        };
-
-        //Forward event to the user
-        routerEmitter.on("synMessage", data => {
-        /*
-        data: {
-          symmetricKey: string,
-          channel: string,
-          data: buffer
-        }
-        */
-        self.emit("synMessage", data);
+  routerEmitter.on("ParentLeft", data => {
+    console.log("Parent left");
+    //Close Servers then emit
+    Promise.all([
+      jServer.close(),
+      router.stopListen(),
+      topology.leaveNetwork(db.getTopologyServers(), db.getNetworkId(), db.getPosition())
+    ]).then(() => {
+      self.emit("parentLeft");
+      //process.exit();
     });
+  });
 
-    routerEmitter.on("dataMessage", data => {
-        console.log("New Data Message!");
-        console.log(data);
-        /*
-        data: {
-          symmetricKey: string,
-          data: buffer
-        }
-        */
-        self.emit("dataMessage", data);
+  // router error/status events to be defined.
+
+  // ctrl+c while in cmd line on windows
+  /*if (process.platform === "win32") {
+    var rl = require("readline").createInterface({
+      input: process.stdin,
+      output: process.stdout
     });
-
-    routerEmitter.on("ParentLeft", data => {
-        //Close Servers then emit
-        Promise.all([
-            jServer.close(), 
-            router.stopListen(),
-            topology.leaveNetwork(db.getTopologyServers(), db.getNetworkId(), db.getPosition())
-        ]).then(() => {
-            self.emit("parentLeft");
-        });
+    rl.on("SIGINT", function () {
+      process.emit("SIGINT");
     });
-
-    // router error/status events to be defined.
+  }
+    // ctrl+c exit
+  process.on("SIGINT", function () {
+    console.log("Stopping server");
+    self.stop().then(() => {
+      process.exit();
+    });
+  });*/
 };
 
 //Make P5 an emitter

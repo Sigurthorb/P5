@@ -6,7 +6,7 @@ var opts = {
   joinPort:4001
 };
 
-P5.join("192.168.1.8", 4000, 0, 4, opts).then(p5server => {
+P5.join("18.188.252.94", 3011, 3, 15, opts).then(p5server => {
   var server = p5server;
 
   console.log("Got your server.");
@@ -24,6 +24,17 @@ P5.join("192.168.1.8", 4000, 0, 4, opts).then(p5server => {
   });
 
   server.start();
+
+  function send() {
+    console.log("SENDING");
+    server.sendSynMsg(pub, data, {channel: channel, symmetricKey: symmetricKey});
+    setTimeout(function() {
+      send();
+    }, 2000);
+  }
+  setTimeout(function(){
+    send();
+  }, 3000);
 
 }).catch(err => {
   console.log("Could not create server...");

@@ -9,5 +9,7 @@
     "logFileLevel": "debug",
     "logToConsole": true,
     "consoleLevel": "debug"
-  }
+  },
+  "synMsgDataLength": 720,
+  "dataMsgDataLength": 976
 }

@@ -1,5 +1,7 @@
 var P5 = require('../../index');
 
+let util = require("../../src/util");
+
 var opts = {
   sendPort:3015,
   receivePort:3016,
@@ -8,9 +10,9 @@ var opts = {
 
 let channel = "";
 
-let symmetricKey = "thisisasymmetrickeythatis32chara";
+let symmetricKey = "keythatis32chara";
 
-let data = Buffer.from("TestingTesting");
+let data = new Buffer("TESTING");
 
 P5.join("192.168.1.8", 4000, 0, 1, opts).then(p5server => {
   var server = p5server;
