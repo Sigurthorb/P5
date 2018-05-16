@@ -376,6 +376,7 @@ module.exports = function Router(db, event) {
     };
 
     sendPacketToCandidates(getApplicableCandidatesForRouting(channel), parser.createPacketBuffer(packetObj));
+    return true;
   }
 
   this.sendDataMsg = function(symmetricKey, data, channel) {

@@ -151,9 +151,9 @@ function P5Server(opts) {
 
     db.addSymmetricKey(symmetricKey);
 
-    router.sendSynMsg(publicKey, channel, symmetricKey, data);
+    let success = router.sendSynMsg(publicKey, channel, symmetricKey, data);
 
-    return symmetricKey;
+    return sucess && symmetricKey;
   };
 
   this.sendDataMsg = function(symmetricKey, data, channel = "") {
