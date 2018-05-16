@@ -94,8 +94,10 @@ exports.join = function(srcNodeIp, srcNodePort, minNodes, maxNodes, opts){
 			let connected = false;
 			setTimeout(function() {
 				if(!connected) {
-					console.log("ERROR: Did not receive a invite after 20 seconds");
-					reject("ERROR: Did not receive a invite after 20 seconds");
+          console.log("ERROR: Did not receive a invite after 20 seconds");
+          jServer.close().then(function() {
+            reject("ERROR: Did not receive a invite after 20 seconds");
+          });
 				}
 			}, 20000);
 			jServer.on("parentRequest", parent => {
