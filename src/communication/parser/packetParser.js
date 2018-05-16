@@ -90,13 +90,13 @@ let messageObj = {
 let buff = createMessageBuffer(messageObj);
 */
 
-let data = {
+/*let data = {
   address: "1.3.3.3",
   port: "1"
 };
 
 let buff = Buffer.from(JSON.stringify(data));
-console.log(buff.byteLength);
+console.log(buff.byteLength);*/
 
 /*
 packetBuffer is min 10 bytes

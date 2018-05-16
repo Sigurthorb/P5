@@ -238,7 +238,7 @@ module.exports = function(){
   }
 
   this.addSymmetricKey = function(key) {
-    if(data.symmetricKeys.indexOf(key) === -1) {
+    if(data.symmetricKeys.indexOf(key) === -1 && key.length === 16) {
       data.symmetricKeys.push(key);
     }
   };

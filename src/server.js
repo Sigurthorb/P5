@@ -20,7 +20,7 @@ function P5Server(opts) {
   db.setReceivePort(opts.receivePort);
   db.setJoinPort(opts.joinPort);
 
-  console.log("NodeInfo:\n\tsendPort:%d\n\treceivePort:%d\n\tjoinPort:%d", opts.sendPort, opts.receivePort, opts.joinPort);
+  console.log("\nNodeInfo:\n\tsendPort:%d\n\treceivePort:%d\n\tjoinPort:%d\n", opts.sendPort, opts.receivePort, opts.joinPort);
 
   //Store this on the db
   db.setTopologyServers(opts.topologyServers);
@@ -142,11 +142,15 @@ function P5Server(opts) {
     let symmetricKey = opts.symmetricKey || keyGenerator.generateSymmetricKey();
 
     if(symmetricKey.length !== 16) {
-      return;
+      return false;
     }
 
-    if(!data || !Buffer.isBuffer(data)  || data.byteLength > 720) {
-      return;
+    if(!data) {
+      data = new Buffer("");
+    }
+
+    if(!Buffer.isBuffer(data)  || data.byteLength > 720) {
+      return false;
     }
 
     db.addSymmetricKey(symmetricKey);
@@ -158,12 +162,12 @@ function P5Server(opts) {
 
   this.sendDataMsg = function(symmetricKey, data, channel = "") {
     //validation
-    if(!data || !Buffer.isBuffer(data)  || data.byteLength > 976) {
-      return;
+    if(!Buffer.isBuffer(data)  || data.byteLength > 976) {
+      return false;
     }
 
     if(symmetricKey.length !== 16) {
-      return;
+      return false;
     }
 
     router.sendDataMsg(symmetricKey, data, channel);

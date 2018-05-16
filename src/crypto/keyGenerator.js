@@ -1,4 +1,5 @@
 const pem = require("pem");
+const rsa = require("node-rsa");
 const crypto = require("crypto");
 const config = require("../config.json");
 const secureRandomString = require('secure-random-string');
@@ -43,10 +44,8 @@ let generateServerCertificates = function() {
 }
 
 let convertKeyToBinary = function(key){
-  key = key.replace("-----BEGIN PUBLIC KEY-----", "").replace("-----END PUBLIC KEY-----", "").replace(/(?:\r\n|\r|\n)/g, "").trim();
-  key = key.substring((key.length/2), key.length);
-  let binaryKey = key.split('').map(c => c.charCodeAt(0).toString(2)).join('');
-  return binaryKey;
+  let publicKey = new rsa(key);
+  return pub.keyPair.n.toBuffer(true).readUInt32LE(2).toString(2).padStart(32,0);
 }
 
 module.exports = {
