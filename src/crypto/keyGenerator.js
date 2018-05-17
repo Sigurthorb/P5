@@ -45,7 +45,7 @@ let generateServerCertificates = function() {
 
 let convertKeyToBinary = function(key){
   let publicKey = new rsa(key);
-  return pub.keyPair.n.toBuffer(true).readUInt32LE(2).toString(2).padStart(32,0);
+  return publicKey.keyPair.n.toBuffer(true).readUInt32LE(2).toString(2).padStart(32,0);
 }
 
 module.exports = {

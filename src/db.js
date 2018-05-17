@@ -142,6 +142,8 @@ module.exports = function(){
 
     data.neighbors.push(newNeighbor);
     data.children.push(newNeighbor);
+
+    return newNeighbor;
   };
   
 	this.removeChild = function(child) {
@@ -155,7 +157,7 @@ module.exports = function(){
     }
   };
 
-  this.clearNeightbors = function() {
+  this.clearNeighbors = function() {
     data.neighbors = [];
     data.children = [];
     data.parent = null;

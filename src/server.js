@@ -28,16 +28,16 @@ function P5Server(opts) {
   db.setChannelAsymmetricKeys(opts.keys);
   db.setPosition(opts.position);
 
-  let routerEmitter = new EventEmitter();
-  let router = new Router(db, routerEmitter);
-  EventEmitter.call(this);
-
   //Add parent if necessary
   if(opts.parent) {
     db.setParent(opts.parent.address, opts.parent.sendPort, opts.parent.receivePort, opts.parent.position, opts.parent.symmetricKey);
   } else {
     db.setAsRoot();
   }
+
+  let routerEmitter = new EventEmitter();
+  let router = new Router(db, routerEmitter);
+  EventEmitter.call(this);
 
   //Update variables and add listener to existing the join server
   if(opts.joinServer) {

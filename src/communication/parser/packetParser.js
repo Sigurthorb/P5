@@ -83,13 +83,14 @@ let buff = createPacketBuffer(packetObj);
 */
 /*
 let messageObj = {
-  checksum: util.getChecksum(data),
-  packet: data
+  checksum: util.getChecksum(new Buffer("asdasd")),
+  packet: new Buffer("")
 }
 
 let buff = createMessageBuffer(messageObj);
-*/
 
+console.log(buff.byteLength);
+*/
 /*let data = {
   address: "1.3.3.3",
   port: "1"

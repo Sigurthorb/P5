@@ -24,6 +24,7 @@
     "express": "^4.16.3",
     "internal-ip": "^3.0.1",
     "node-rsa": "^1.0.0",
+    "node-stopwatch": "0.0.1",
     "pem": "^1.12.4",
     "public-ip": "^2.4.0",
     "random-number-csprng": "^1.0.2",
