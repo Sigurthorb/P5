@@ -163,6 +163,8 @@ module.exports = function Router(db, event) {
     }
   }
 
+  let dropCount = {};
+
   let messageHandler = function(message, remote) {
     let routingData = db.getNeighborRoutingData(remote);
     if(!routingData.sender) {
@@ -175,7 +177,17 @@ module.exports = function Router(db, event) {
     messageObj.packet = encryption.decryptSymmetricWithKey(messageObj.packet, routingData.sender.symmetricKey);
 
     if(!util.verifyChecksum(messageObj.packet, messageObj.checksum)) {
-      log("warn", "Packet from sender with address %s:%d with position '%s' did not pass checksum verification, ignoring message", remote.address, remote.port, routingData.sender.position, messageObj);
+      let nodeId = ("%s:%d", remote.address, remote.port);
+      if(!dropCount[nodeId]) {
+        dropCount[nodeId] = 1;
+      } else {
+        dropCount[nodeId]++;
+      }
+
+      if(dropCount[nodeId] % 1000 === 0) {
+        log("info", "so far dropped %s noise packets from node position '%s'", dropCount[nodeId], routingData.sender.position);
+      }
+      
       return;
     }
 

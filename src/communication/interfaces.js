@@ -3,10 +3,10 @@ const parser = require("./parser/packetParser");
 const encryption = new (require("./encryption"))({});
 //config
 
-const QUEUE_LEN = 1
+const QUEUE_LEN = 252
 const POOL_SIZE = QUEUE_LEN*4;
 const MAX_INPUT_QUEUE_SIZE = QUEUE_LEN*2;
-const PERIOD_MSEC = 2000
+const PERIOD_MSEC = 1000
 
 let randomPacketPool = function() {
   this.pool = [];
@@ -116,7 +116,6 @@ module.exports = function InterfaceHandler(client) {
         if(err) {
           console.log("error", "Failed to send message to %s:%d, error:%s", neighbor.address, neighbor.receivePort, err.message);
         }
-        console.log(neighbor)
       });
     }
   }
