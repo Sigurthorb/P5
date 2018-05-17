@@ -3,7 +3,7 @@ const parser = require("./parser/packetParser");
 const encryption = new (require("./encryption"))({});
 //config
 
-const QUEUE_LEN = 100
+const QUEUE_LEN = 50
 const POOL_SIZE = QUEUE_LEN*4;
 const MAX_INPUT_QUEUE_SIZE = QUEUE_LEN*2;
 const PERIOD_MSEC = 500
@@ -63,7 +63,7 @@ let Interface = function(neighbor, sendQueuesCb) {
   this.insertRealPackets = function() {
     let randIndexGen = randIndexFunGenerator(this.packetQueue.length);
     let toAddToQueue = [];
-    
+
     if(this.incomingPacketQueue.length > 0) {
       if(this.incomingPacketQueue > QUEUE_LEN) {
         toAddToQueue = this.incomingPacketQueue.splice(0, QUEUE_LEN);
