@@ -44,8 +44,13 @@ let generateServerCertificates = function() {
 }
 
 let convertKeyToBinary = function(key){
+<<<<<<< HEAD
   let publicKey = new rsa(key);
   return publicKey.keyPair.n.toBuffer(true).readUInt32LE(2).toString(2).padStart(32,0);
+=======
+  let pub = new rsa(key);
+  return pub.keyPair.n.toBuffer(true).readUInt32LE(2).toString(2).padStart(32,0);
+>>>>>>> 49c0a68... Fix bug
 }
 
 module.exports = {
