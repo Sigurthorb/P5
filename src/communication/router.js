@@ -139,7 +139,7 @@ module.exports = function Router(db, event) {
     let candidates = routingData.candidates; 
     if(routingData.fromParent) {
       let packet = parser.createPacketBuffer(packetObj);
-      interfaceHandler.sendPacketSync(candidates, packet).then(() => {
+      interfaceHandler.sendPacketSync(packet, candidates).then(() => {
         // Expecting that the node that is leaving does not need event emmited
         log("info", "%d nodes have been notified of node departure", candidates.length);
         interfaceHandler.closeAllInterfaces()
@@ -215,6 +215,7 @@ module.exports = function Router(db, event) {
         }
       }
     }
+    log("info", "Forwarding %s packet", packetObj.packetType);
 
     if (packetObj.packetType === "JOIN") {
       processJoinPacket(packetObj, routingData);
@@ -230,7 +231,6 @@ module.exports = function Router(db, event) {
     }
     
     if (packetObj.packetType === "SYN" || packetObj.packetType === "DATA") {
-      log("info", "Forwarding %s packet", packetObj.packetType);
       interfaceHandler.addToMultipleQueues(messageObj.packet, routingData.candidates);
     } else {
       log("error", "Missing case for packet type. packet: \n", JSON.stringify(packetObj, null, 2), "\n\nRouting data: \n", JSON.stringify(routingData, null, 2));
