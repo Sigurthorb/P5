@@ -160,8 +160,8 @@ module.exports = function InterfaceHandler(client) {
     }
   }
 
-  this.addToMultipleQueues = function(packet, neigbors) {
-    for(let i = 0; i < neigbors.length; i++) {
+  this.addToMultipleQueues = function(packet, neighbors) {
+    for(let i = 0; i < neighbors.length; i++) {
       this.addToQueue(packet, neighbors[i]);
     }
   }
