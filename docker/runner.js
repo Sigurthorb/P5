@@ -33,7 +33,7 @@ setTimeout(function() {
     } else {
       startClient();
     }
-}, waitTime*1000);
+}, 2*waitTime*1000);
 
 let startRoot = function() {
   P5.create(["p5-topology.herokuapp.com"], opts).then(p5server => {

@@ -37,7 +37,6 @@ module.exports = function Router(db, event) {
 
   if(!db.isRoot()) {
     let parent = db.getParent();
-    console.log(parent);
     interfaceHandler.addInterface(parent);
   }
 
@@ -63,7 +62,7 @@ module.exports = function Router(db, event) {
     
     log("info", "Sending a join invitiation to candidate child with position %s", childPosition);
     joinClient.addChild(address, port, childPosition, db.getSendPort(), db.getReceivePort(), symmetricKey).then((obj) => {
-      log("debug", "Successfully sent ParentRequest to candidate channel %s, adding as neighbor", childPosition);
+      log("info", "Successfully sent ParentRequest to candidate node with position %s, adding as neighbor", childPosition);
       let newChild = db.addChild(address, obj.sendPort, obj.receivePort, childPosition, symmetricKey);
       interfaceHandler.addInterface(newChild);
       db.removePotentialChild();
@@ -80,7 +79,7 @@ module.exports = function Router(db, event) {
     let childCount = db.getChildrenCount();
     let noMoreRoomForChildren = (childCount + db.getPotentialChildren()) >= 2;
 
-    if(packetObj.channel.startsWith(position) && position !== packetObj.channel) { // startsWith is true when equal
+    if(packetObj.channel.startsWith(position) && position !== packetObj.channel) {
       // needs to be routed further down, select right child
       let candidates = db.getChildren();
       let candidate = undefined;
@@ -95,7 +94,6 @@ module.exports = function Router(db, event) {
       if(!candidate) {
         log("warn", "Received a join to a channel that doesn't exist, ignoring join");
       } else {
-        // OUTGOING PACKET
         let packet = parser.createPacketBuffer(packetObj);
         interfaceHandler.addToQueue(packet, candidate);
       }
@@ -107,7 +105,6 @@ module.exports = function Router(db, event) {
         if(childCount === 2) {
           util.getRandomNum(0,1).then(pick => {
             let children = db.getChildren();
-            // OUTGOING PACKETS
             interfaceHandler.addToQueue(packet, children[pick]);
           });
         } else if (childCount === 1) {
@@ -115,7 +112,6 @@ module.exports = function Router(db, event) {
           interfaceHandler.addToQueue(packet, child);
         } // else only potential children, no place to route join request, ignoring
       } else {
-        // SELECTED AS PARENT
         db.addPotentialChild();
         let newNeighbor = JSON.parse(parser.parseDataBuffer(packetObj.data).toString());
         let port = newNeighbor.port;
@@ -168,8 +164,8 @@ module.exports = function Router(db, event) {
   let messageHandler = function(message, remote) {
     let routingData = db.getNeighborRoutingData(remote);
     if(!routingData.sender) {
-      // Can enter here if a node sends a leave message but is still listening
-      log("warn", "Received message from a unknown neighbor with address %s:%d, ignoring message", remote.address, remote.port);
+      // Can enter here if a node sends a leave message but is still broadcasting
+      log("debug", "Received message from a unknown neighbor with address %s:%d, ignoring message", remote.address, remote.port);
       return;
     }
 
@@ -185,7 +181,7 @@ module.exports = function Router(db, event) {
       }
 
       if(dropCount[nodeId] % 1000 === 0) {
-        log("info", "so far dropped %s noise packets from node position '%s'", dropCount[nodeId], routingData.sender.position);
+        //log("info", "so far dropped %s noise packets from node position '%s'", dropCount[nodeId], routingData.sender.position);
       }
       
       return;
@@ -194,6 +190,7 @@ module.exports = function Router(db, event) {
     let packetObj = parser.parsePacketBuffer(messageObj.packet);
     
     if(isDestinedForNode(db.getChannel(), packetObj.channel)) {
+      log("info", "Received packet destined for my channel '%s'", db.getChannel());
       if(packetObj.packetType === "SYN") {
         let decryptedData = encryption.decryptAsymmetric(packetObj.data.slice(2,258));
         if(decryptedData) {
@@ -228,11 +225,12 @@ module.exports = function Router(db, event) {
     }
 
     if(routingData.candidates.lenght === 0) {
-      log("debug", "There are no candidates to receive packet from %s received from address %s:%d, not routing packet %j", (routingData.fromParent ? "parent" : "child"), routingData.sender.address, routingData.sender.sendPort, packetObj);
+      log("info", "There are no candidates to receive packet from %s received from address %s:%d, not routing packet %j", (routingData.fromParent ? "parent" : "child"), routingData.sender.address, routingData.sender.sendPort, packetObj);
       return;
     }
     
     if (packetObj.packetType === "SYN" || packetObj.packetType === "DATA") {
+      log("info", "Forwarding %s packet", packetObj.packetType);
       interfaceHandler.addToMultipleQueues(messageObj.packet, routingData.candidates);
     } else {
       log("error", "Missing case for packet type. packet: \n", JSON.stringify(packetObj, null, 2), "\n\nRouting data: \n", JSON.stringify(routingData, null, 2));

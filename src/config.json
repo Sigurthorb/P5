@@ -6,9 +6,9 @@
   "logger": {
     "logToFile": false,
     "logfile": "test.log",
-    "logFileLevel": "debug",
+    "logFileLevel": "info",
     "logToConsole": true,
-    "consoleLevel": "debug"
+    "consoleLevel": "info"
   },
   "synMsgDataLength": 720,
   "dataMsgDataLength": 976

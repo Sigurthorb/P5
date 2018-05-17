@@ -3,10 +3,10 @@ const parser = require("./parser/packetParser");
 const encryption = new (require("./encryption"))({});
 //config
 
-const QUEUE_LEN = 252
+const QUEUE_LEN = 100
 const POOL_SIZE = QUEUE_LEN*4;
 const MAX_INPUT_QUEUE_SIZE = QUEUE_LEN*2;
-const PERIOD_MSEC = 1000
+const PERIOD_MSEC = 500
 
 let randomPacketPool = function() {
   this.pool = [];
@@ -50,7 +50,7 @@ let Interface = function(neighbor, sendQueuesCb) {
   this.generateRandomPacketQueue = function() {
     this.packetQueue = [];
     for(let i = 0; i < QUEUE_LEN; i++) {
-      this.packetQueue.push(util.getRandomBytes(1004));
+      this.packetQueue.push(util.getRandomBytes(1024));
     }
   }
 
@@ -61,27 +61,31 @@ let Interface = function(neighbor, sendQueuesCb) {
   }
 
   this.insertRealPackets = function() {
-
-    let toAddToQueue = [];
-    if(this.incomingPacketQueue > QUEUE_LEN) {
-      toAddToQueue = this.incomingPacketQueue.splice(0, QUEUE_LEN);
-    } else {
-      toAddToQueue = this.incomingPacketQueue;
-      this.incomingPacketQueue = [];
-    }
-
     let randIndexGen = randIndexFunGenerator(this.packetQueue.length);
+    let toAddToQueue = [];
+    
+    if(this.incomingPacketQueue.length > 0) {
+      if(this.incomingPacketQueue > QUEUE_LEN) {
+        toAddToQueue = this.incomingPacketQueue.splice(0, QUEUE_LEN);
+      } else {
+        toAddToQueue = this.incomingPacketQueue;
+        this.incomingPacketQueue = [];
+      }
 
     for(var i = 0; i < toAddToQueue.length; i++) {
       var packet = toAddToQueue[i];
       let index = randIndexGen();
+      let encryptedPacket = encryption.encryptSymmetric(packet, this.neighbor.symmetricKey)
       let obj = {
         checksum: util.getChecksum(packet),
-        packet: encryption.encryptSymmetric(packet, this.neighbor.symmetricKey)
+        packet: encryptedPacket
       }
       this.packetQueue[index] = parser.createMessageBuffer(obj);
     }
 
+    
+  } 
+  /*
     for(var i = toAddToQueue.length; i < QUEUE_LEN; i++) {
       let index = randIndexGen();
       // encrypt with key and generate random checksum
@@ -90,7 +94,7 @@ let Interface = function(neighbor, sendQueuesCb) {
         packet: encryption.encryptSymmetric(this.packetQueue[index], this.neighbor.symmetricKey)
       };
       this.packetQueue[index] = parser.createMessageBuffer(obj);
-    }
+    }*/
     delete randIndexGen;
   }
 
@@ -121,9 +125,14 @@ module.exports = function InterfaceHandler(client) {
   }
 
   this.addInterface = function(neighbor) {
+
     let newInterface = new Interface(neighbor, sendPackets);
     interfaces.push(newInterface);
-    newInterface.start();
+    console.log("Starting interface for '%s' is 1 seconds", neighbor.position);
+    setTimeout(function(){
+      newInterface.start();
+      console.log("Interface for '%s' has started", neighbor.position);
+    }, 1000);
   }
 
   this.removeInterface = function(neighbor) {
@@ -146,8 +155,8 @@ module.exports = function InterfaceHandler(client) {
   this.addToQueue = function(packet, neighbor) {
     let index = interfaces.findIndex(intface => intface.neighbor.position === neighbor.position);
     if(index > -1) {
-      interfaces[index].stop();
-      interfaces.splice(index);
+      console.log("sending to neighbor: ", neighbor);
+      interfaces[index].add(packet)
     }
   }
 

@@ -53,6 +53,8 @@ function P5Server(opts) {
   //Make this accessible to the user
   this.key = opts.keys.publicKey;
   this.channel = opts.channel;
+  this.addSymmetricKey = db.addSymmetricKey;
+  this.removeSymmetricKey = db.removeSymmetricKey;
 
   this.stop = function() {
     self.isListening = false;
@@ -71,9 +73,6 @@ function P5Server(opts) {
     });
   };
 
-  this.addSymmetricKey = function(key) {
-    db.addSymmetricKey(key);
-  };
 
   this.getTopologyServer = function() {
     return db.getTopologyServers()[0];
