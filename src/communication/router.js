@@ -282,7 +282,7 @@ module.exports = function Router(db, event) {
       asymBuff = encryption.encryptAsymmetric(parser.createSynBuffer(synObj), publicKey);    
     } catch(err) {
       log("error", "Failed to encrypt data with publicKey, not sending, error: %s", err.message, err);
-      return;
+      return false;
     }
     let symBuff = encryption.encryptSymmetric(data, symmetricKey);
 
