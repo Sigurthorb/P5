@@ -23,6 +23,7 @@ var opts = {
   joinPort:parseInt(process.env.JOIN_PORT)
 };
 
+let topology = process.env.TOPOLOGY_SERVER
 
 console.log("Starting as " + ( isRoot ? "ROOT": "NON_ROOT") + " in " + waitTime + " seconds");
 console.log("With the ops: " + JSON.stringify(opts));
@@ -36,7 +37,7 @@ setTimeout(function() {
 }, 2*waitTime*1000);
 
 let startRoot = function() {
-  P5.create(["p5-topology.herokuapp.com"], opts).then(p5server => {
+  P5.create([topology], opts).then(p5server => {
     var server = p5server;
   
     console.log("Got your server.");
@@ -71,8 +72,6 @@ let startRoot = function() {
     console.log(err);
   });
 };
-
-
 
 let startClient = function() {
   P5.join("p5-root", 3001, 0, 100, opts).then(p5server => {

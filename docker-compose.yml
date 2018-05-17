@@ -7,6 +7,7 @@ services:
      - "3001:3001"
     environment:
      - ROOT_NODE=TRUE
+     - TOPOLOGY_SERVER=p5-topology.herokuapp.com
      - RECEIVE_PORT=3000
      - JOIN_PORT=3001
      - SEND_PORT=4000
