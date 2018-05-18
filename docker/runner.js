@@ -56,6 +56,10 @@ let startRoot = function() {
   
     server.start();
 
+    /*setTimeout(function() {
+      console.log("killing")
+      process.exit();
+    }, 130000);*/
     
     if(process.env.LEAVE) {
       console.log("\n\n\n I WILL LEAVE IN 70 SEK \n\n\n");
@@ -94,6 +98,13 @@ let startClient = function() {
     server.on("parentLeft", () => {
       process.exit();
     });
+
+    if(process.env.WAIT_CONN === "6" || process.env.WAIT_CONN === "12") {
+      setTimeout(function() {
+        console.log("killing")
+        process.exit();
+      }, 130000);
+    }
   
     server.start();
 

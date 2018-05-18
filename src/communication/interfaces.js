@@ -72,29 +72,18 @@ let Interface = function(neighbor, sendQueuesCb) {
         this.incomingPacketQueue = [];
       }
 
-    for(var i = 0; i < toAddToQueue.length; i++) {
-      var packet = toAddToQueue[i];
-      let index = randIndexGen();
-      let encryptedPacket = encryption.encryptSymmetric(packet, this.neighbor.symmetricKey)
-      let obj = {
-        checksum: util.getChecksum(packet),
-        packet: encryptedPacket
+      for(var i = 0; i < toAddToQueue.length; i++) {
+        var packet = toAddToQueue[i];
+        let index = randIndexGen();
+        let encryptedPacket = encryption.encryptSymmetric(packet, this.neighbor.symmetricKey)
+        let obj = {
+          checksum: util.getChecksum(packet),
+          packet: encryptedPacket
+        }
+        this.packetQueue[index] = parser.createMessageBuffer(obj);
       }
-      this.packetQueue[index] = parser.createMessageBuffer(obj);
     }
-
-    
-  } 
-  /*
-    for(var i = toAddToQueue.length; i < QUEUE_LEN; i++) {
-      let index = randIndexGen();
-      // encrypt with key and generate random checksum
-      let obj = {
-        checksum: util.getRandomBytes(4),
-        packet: encryption.encryptSymmetric(this.packetQueue[index], this.neighbor.symmetricKey)
-      };
-      this.packetQueue[index] = parser.createMessageBuffer(obj);
-    }*/
+    // Might want to encrypt the random data for distribution purposes
     delete randIndexGen;
   }
 

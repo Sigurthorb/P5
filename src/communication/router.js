@@ -10,6 +10,7 @@ const util = require("../util");
 const joinClient = require("../joinClient");
 const keyGenerator = require("../crypto/keyGenerator");
 const InterfaceHandler = require("./interfaces");
+const topology = require("../topology");
 
 
 let isDestinedForNode = function(nodePosition, destinationChannel) {
@@ -27,6 +28,7 @@ let getCandidatesToSendTo = function(candidates, channel) {
 }
 
 module.exports = function Router(db, event) {
+  let self = this;
   let encryption = new EnDeCrypt(db);
   let serverListening = false;
   let listener = dgram.createSocket('udp4');
@@ -65,6 +67,7 @@ module.exports = function Router(db, event) {
       log("info", "Successfully sent ParentRequest to candidate node with position %s, adding as neighbor", childPosition);
       let newChild = db.addChild(address, obj.sendPort, obj.receivePort, childPosition, symmetricKey);
       interfaceHandler.addInterface(newChild);
+      logMessage({sender: newChild});
       db.removePotentialChild();
     }).catch((err) => {
       log("error", "Failed to add child with error: %s", err.message);
@@ -159,31 +162,52 @@ module.exports = function Router(db, event) {
     }
   }
 
-  let dropCount = {};
+  const KILL_WAIT = 4000; // wait 4 seconds before assuming abrupt departure
+  let lastMessageLog = {}
+  let lastCheck = new Date();
+
+  let logMessage = function(routingData) {
+    let time = new Date();
+    lastMessageLog[routingData.sender.position] = time
+    if((time - lastCheck) > KILL_WAIT) {
+      let keys = Object.keys(lastMessageLog);
+      //log("debug", "checking last message interval");
+      for(let i = 0; i < keys.length; i++) {
+        if(time - lastMessageLog[keys[i]] > 4000) {
+          log("info", "Node with Position '%s' has not sent a message in %dms", keys[i], time - lastMessageLog[keys[i]]);
+          let neighbor = db.getNeighborWithPos(keys[i]);
+          if(db.isParent(neighbor)) {
+            log("info", "Node is parent, need to leave network");
+            self.leaveNetwork(false);
+          } else {
+            log("info", "Node is child, removing from topology ");
+            topology.leaveNetwork(db.getTopologyServers(), db.getNetworkId(), neighbor.position).catch((res) => {
+              log("info", "Topology returned error %s, no biggie, continuing", res.message);
+            });
+            interfaceHandler.removeInterface(neighbor);
+            db.removeChild(neighbor);
+          }
+          delete lastMessageLog[keys[i]];
+        }
+      }
+      lastCheck = time;
+    }
+  };
 
   let messageHandler = function(message, remote) {
     let routingData = db.getNeighborRoutingData(remote);
     if(!routingData.sender) {
-      // Can enter here if a node sends a leave message but is still broadcasting
-      log("debug", "Received message from a unknown neighbor with address %s:%d, ignoring message", remote.address, remote.port);
+      // Unknown sender, ignoring
       return;
     }
+
+    logMessage(routingData);
 
     let messageObj = parser.parseMessageBuffer(message);
     messageObj.packet = encryption.decryptSymmetricWithKey(messageObj.packet, routingData.sender.symmetricKey);
 
     if(!util.verifyChecksum(messageObj.packet, messageObj.checksum)) {
-      let nodeId = ("%s:%d", remote.address, remote.port);
-      if(!dropCount[nodeId]) {
-        dropCount[nodeId] = 1;
-      } else {
-        dropCount[nodeId]++;
-      }
-
-      if(dropCount[nodeId] % 1000 === 0) {
-        //log("info", "so far dropped %s noise packets from node position '%s'", dropCount[nodeId], routingData.sender.position);
-      }
-      
+      // Noise packet or invalid packet, dropping
       return;
     }
 
@@ -237,7 +261,7 @@ module.exports = function Router(db, event) {
     }
   }
 
-  this.leaveNetwork = function() {
+  this.leaveNetwork = function(thisNodeLeft = true) {
 
     let obj = {
       realLen: 0,
@@ -252,7 +276,7 @@ module.exports = function Router(db, event) {
       checksum: util.getChecksum(buffer),
       data: buffer
     };
-    processLeavePacket(packetObj, {fromParent: true, candidates: db.getNeighbors(), thisNodeLeft: true});
+    processLeavePacket(packetObj, {fromParent: true, candidates: db.getNeighbors(), thisNodeLeft: thisNodeLeft});
   }
 
   this.sendJoinMsg = function(address, port, channel) {

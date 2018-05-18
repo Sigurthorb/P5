@@ -119,6 +119,15 @@ module.exports = function(){
     return data.children;
   }
 
+  this.getNeighborWithPos = function(pos) {
+    let index = data.neighbors.findIndex(n => n.position === pos);
+    return data.neighbors.slice(index, index+1)[0];
+  }
+
+  this.isParent = function(neighbor) {
+    return data.parent && data.parent.position === neighbor.position;
+  }
+
   this.getFirstChild = function() {
     return data.children[0];
   }

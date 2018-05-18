@@ -1,12 +1,13 @@
 var P5 = require('../../index');
 
+
 var opts = {
-  sendPort:3002,
-  receivePort:3003,
-  joinPort:4001
+  sendPort:4010,
+  receivePort:4011,
+  joinPort:4012
 };
 
-P5.join("192.168.1.8", 4000, 0, 15, opts).then(p5server => {
+P5.join("192.168.1.8", 3001, 0, 15, opts).then(p5server => {
   var server = p5server;
 
   console.log("Got your server.");
