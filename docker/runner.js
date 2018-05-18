@@ -99,13 +99,6 @@ let startClient = function() {
       process.exit();
     });
 
-    if(process.env.WAIT_CONN === "6" || process.env.WAIT_CONN === "12") {
-      setTimeout(function() {
-        console.log("killing")
-        process.exit();
-      }, 130000);
-    }
-  
     server.start();
 
     if(process.env.LEAVE) {

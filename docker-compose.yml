@@ -3,7 +3,7 @@ services:
   p5-root:
     image: p5
     ports:
-     - "3000:3000"
+     - "3000:3000/udp"
      - "3001:3001"
     environment:
      - ROOT_NODE=TRUE
@@ -15,7 +15,7 @@ services:
   p5-join1:
     image: p5
     ports:
-      - "3002:3002"
+      - "3002:3002/udp"
       - "3003:3003"
     depends_on:
       - "p5-root"
@@ -28,7 +28,7 @@ services:
   p5-join2:
     image: p5
     ports:
-      - "3004:3004"
+      - "3004:3004/udp"
       - "3005:3005"
     depends_on:
       - "p5-root"
@@ -41,7 +41,7 @@ services:
   p5-join3:
     image: p5
     ports:
-      - "3006:3006"
+      - "3006:3006/udp"
       - "3007:3007"
     depends_on:
       - "p5-root"
@@ -54,7 +54,7 @@ services:
   p5-join4:
     image: p5
     ports:
-      - "3008:3008"
+      - "3008:3008/udp"
       - "3009:3009"
     depends_on:
       - "p5-root"
@@ -67,7 +67,7 @@ services:
   p5-join5:
     image: p5
     ports:
-      - "3010:3010"
+      - "3010:3010/udp"
       - "3011:3011"
     depends_on:
       - "p5-root"
@@ -80,7 +80,7 @@ services:
   p5-join6:
     image: p5
     ports:
-      - "3012:3012"
+      - "3012:3012/udp"
       - "3013:3013"
     depends_on:
       - "p5-root"
@@ -93,7 +93,7 @@ services:
   p5-join7:
     image: p5
     ports:
-      - "3014:3014"
+      - "3014:3014/udp"
       - "3015:3015"
     depends_on:
       - "p5-root"
@@ -106,7 +106,7 @@ services:
   p5-join8:
     image: p5
     ports:
-      - "3016:3016"
+      - "3016:3016/udp"
       - "3017:3017"
     depends_on:
       - "p5-root"
@@ -119,7 +119,7 @@ services:
   p5-join9:
     image: p5
     ports:
-      - "3018:3018"
+      - "3018:3018/udp"
       - "3019:3019"
     depends_on:
       - "p5-root"
@@ -132,7 +132,7 @@ services:
   p5-join10:
     image: p5
     ports:
-      - "3020:3020"
+      - "3020:3020/udp"
       - "3021:3021"
     depends_on:
       - "p5-root"
