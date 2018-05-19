@@ -1,14 +1,22 @@
 # P5
-NPM packet for a P5 node
+NPM packet for a P5 node.
+This project was created as part of a final project for CMSC 711 with Professor Bobby Bhattacharjee.
 
 ### Dependencies
-python 2.7 needs to be in path
-Follow installation guide: https://github.com/JoshKaufman/ursa#building-and-installing
- - OpenSSL version 1_0_2o is required on windows
-
-#### Installations
-Node version 8 or higher
-npm
+Node version 8.11 or higher & npm
+OpenSSL needs to be accessible in path
+- Windows users:  http://slproweb.com/products/Win32OpenSSL.html
 
 #### Setup
-upd port open and routed to your computer. Routing to the from the router port to same computer port is required
+1 upd port open and forwarded to your computer.
+1 tcp port open and forwarded to your computer.
+
+
+#### Execution
+
+A network can be boostrapped using docker and docker compose.
+To run a network with docker, follow these steps:
+
+1. Run `docker build -t p5 .`
+2. Edit the docker-compose file to a topology server (Default value a heroku server)
+3. Run `docker-compose up`

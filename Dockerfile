@@ -17,6 +17,6 @@ WORKDIR /p5
 
 COPY . /p5/
 
-RUN rm -rf node_modules && npm i -dd
+RUN rm -rf node_modules && npm i
 
 ENTRYPOINT [ "node", "docker/runner.js" ]
