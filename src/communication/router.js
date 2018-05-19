@@ -176,16 +176,18 @@ module.exports = function Router(db, event) {
         if(time - lastMessageLog[keys[i]] > 4000) {
           log("info", "Node with Position '%s' has not sent a message in %dms", keys[i], time - lastMessageLog[keys[i]]);
           let neighbor = db.getNeighborWithPos(keys[i]);
-          if(db.isParent(neighbor)) {
-            log("info", "Node is parent, need to leave network");
-            self.leaveNetwork(false);
-          } else {
-            log("info", "Node is child, removing from topology ");
-            topology.leaveNetwork(db.getTopologyServers(), db.getNetworkId(), neighbor.position).catch((res) => {
-              log("info", "Topology returned error %s, no biggie, continuing", res.message);
-            });
-            interfaceHandler.removeInterface(neighbor);
-            db.removeChild(neighbor);
+          if(neighbor) {
+            if(db.isParent(neighbor)) {
+              log("info", "Node is parent, need to leave network");
+              self.leaveNetwork(false);
+            } else {
+              log("info", "Node is child, removing from topology ");
+              topology.leaveNetwork(db.getTopologyServers(), db.getNetworkId(), neighbor.position).catch((res) => {
+                log("info", "Topology returned error %s, no biggie, continuing", res.message);
+              });
+              interfaceHandler.removeInterface(neighbor);
+              db.removeChild(neighbor);
+            }
           }
           delete lastMessageLog[keys[i]];
         }
